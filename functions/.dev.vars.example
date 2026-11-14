@@ -1,0 +1,16 @@
+# Copy to .dev.vars for `wrangler dev`. In production use `wrangler secret put NAME`.
+# Shared secret: add ?key=<WEBHOOK_SECRET> to every tool URL you paste into Vapi/Retell.
+WEBHOOK_SECRET=change-me
+CALCOM_API_KEY=cal_live_xxx
+GHL_API_TOKEN=pit-xxx
+VAPI_API_KEY=xxx
+# Google Apps Script web app URL from sheets/call-log.gs
+SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/xxx/exec
+# Supabase > Project Settings > API Keys > secret key (sb_secret_...) or legacy service_role key. Never the anon/publishable key.
+SUPABASE_SERVICE_KEY=sb_secret_xxx
+# Cal.com > Settings > Developer > Webhooks > secret (same value on both sides)
+CALCOM_WEBHOOK_SECRET=change-me
+# Sheet tab names: Demo 1 dental, Demo 2 home services, Demo 3 speed-to-lead (created if missing)
+SHEET_TAB_DEMO1=demo1
+SHEET_TAB_DEMO2=demo2
+SHEET_TAB_DEMO3=demo3

@@ -1,0 +1,30 @@
+# Copy to wrangler.toml (git-ignored) and fill in your IDs: cp wrangler.toml.example wrangler.toml
+name = "voice-agent-functions"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+# Non-secret settings. Secrets go in with `wrangler secret put <NAME>` (see .dev.vars.example).
+[vars]
+TIMEZONE = "America/New_York"
+# Demo 1 (Cal.com)
+CALCOM_EVENT_TYPE_ID = "1234567"
+# Domain for the placeholder caller email (caller-<phone>@DOMAIN). Must accept mail or Cal.com rejects the booking.
+BOOKING_EMAIL_DOMAIN = "your-domain.com"
+# Supabase project for the member + booking lists (tables in supabase/schema.sql)
+SUPABASE_URL = "https://YOUR-PROJECT.supabase.co"
+# Demo 2 (GoHighLevel)
+GHL_LOCATION_ID = "YOUR_GHL_LOCATION_ID"
+GHL_CALENDAR_ID = "YOUR_GHL_CALENDAR_ID"
+GHL_PIPELINE_ID = "YOUR_GHL_PIPELINE_ID"
+GHL_STAGE_NEW = "YOUR_STAGE_ID_NEW_LEAD"
+GHL_STAGE_BOOKED = "YOUR_STAGE_ID_BOOKED"
+GHL_STAGE_EMERGENCY = "YOUR_STAGE_ID_EMERGENCY"
+# Demo 2 maintenance plan upsell: "Memberships" pipeline and its "Interested" stage (optional)
+GHL_MEMBERSHIP_PIPELINE_ID = "YOUR_MEMBERSHIP_PIPELINE_ID"
+GHL_MEMBERSHIP_STAGE_INTERESTED = "YOUR_STAGE_ID_INTERESTED"
+PLAN_PRICE_PER_YEAR = "149"
+# Demo 3 (Vapi outbound)
+VAPI_SPEED_TO_LEAD_ASSISTANT_ID = "YOUR_SPEED_TO_LEAD_ASSISTANT_ID"
+VAPI_OUTBOUND_PHONE_NUMBER_ID = "YOUR_VAPI_PHONE_NUMBER_ID"
+# Published CSV link of the client config sheet (File > Share > Publish to web > CSV)
+CLIENTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/YOUR_PUBLISHED_SHEET/pub?output=csv"

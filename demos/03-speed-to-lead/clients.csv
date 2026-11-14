@@ -1,0 +1,4 @@
+client_id,business_name,agent_name,offer,q1,q2,q3,meeting_type,price_guidance
+sunpeak-solar,SunPeak Solar,Maya,a free solar savings quote,Do you own the home?,Roughly what is your average monthly electric bill?,Is your roof less than 15 years old?,15-minute call with a solar advisor,Most homeowners pay nothing upfront; the advisor gives exact numbers
+glow-medspa,Glow Med Spa,Chloe,a free skin consultation,Which treatment are you most interested in?,Have you had this treatment before?,Are weekdays or weekends better for you?,free 20-minute in-clinic consultation,Consultations are free and treatment prices are confirmed at the visit
+summit-roofing,Summit Roofing,Jake,a free roof inspection,Is this for storm damage or general wear?,Do you know roughly how old the roof is?,Are you working with insurance on this?,free on-site inspection,Inspections are free and the inspector gives a written quote

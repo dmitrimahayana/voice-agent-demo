@@ -1,0 +1,144 @@
+{
+  "name": "Speed-to-lead: form to AI call in 30 seconds",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "speed-to-lead",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "a1",
+      "name": "Lead form webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "speed-to-lead"
+    },
+    {
+      "parameters": {
+        "url": "https://docs.google.com/spreadsheets/d/e/XXXX/pub?output=csv",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "a2",
+      "name": "Fetch client config (Google Sheet CSV)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Replace the URL with your sheet's File > Share > Publish to web > CSV link. Same value as CLIENTS_CSV_URL in the Code node."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Edit these three values after import.\nconst SETTINGS = {\n  CLIENTS_CSV_URL: \"https://docs.google.com/spreadsheets/d/e/XXXX/pub?output=csv\",\n  VAPI_ASSISTANT_ID: \"your-speed-to-lead-assistant-id\",\n  VAPI_PHONE_NUMBER_ID: \"your-imported-twilio-number-id\",\n};\n\nconst lead = $('Lead form webhook').first().json.body || {};\nconst csv = $input.first().json.data || \"\";\n\n// Tiny CSV parser (quoted fields supported)\nfunction parseCsv(text) {\n  const rows = []; let row = [], f = \"\", q = false;\n  for (let i = 0; i < text.length; i++) {\n    const c = text[i];\n    if (q) { if (c === '\"' && text[i+1] === '\"') { f += '\"'; i++; } else if (c === '\"') q = false; else f += c; }\n    else if (c === '\"') q = true;\n    else if (c === ',') { row.push(f); f = \"\"; }\n    else if (c === '\\n' || c === '\\r') { if (c === '\\r' && text[i+1] === '\\n') i++; row.push(f); rows.push(row); row = []; f = \"\"; }\n    else f += c;\n  }\n  if (f || row.length) { row.push(f); rows.push(row); }\n  const [h, ...b] = rows.filter(r => r.some(x => x.trim()));\n  return b.map(r => Object.fromEntries(h.map((k, i) => [k.trim(), (r[i] || \"\").trim()])));\n}\n\nconst client = parseCsv(csv).find(r => r.client_id === lead.client_id);\nif (!client) throw new Error(`Unknown client_id: ${lead.client_id}`);\n\nconst d = String(lead.phone || \"\").replace(/\\D/g, \"\");\nconst number = String(lead.phone || \"\").trim().startsWith(\"+\") ? `+${d}` : (d.length === 10 ? `+1${d}` : `+${d}`);\nconst name = String(lead.name || \"\").trim();\n\nreturn [{ json: {\n  client_id: client.client_id,\n  business_name: client.business_name,\n  vapiPayload: {\n    assistantId: SETTINGS.VAPI_ASSISTANT_ID,\n    phoneNumberId: SETTINGS.VAPI_PHONE_NUMBER_ID,\n    customer: { number, name },\n    assistantOverrides: { variableValues: {\n      agent_name: client.agent_name,\n      business_name: client.business_name,\n      offer: lead.offer || client.offer,\n      lead_first_name: name.split(/\\s+/)[0],\n      lead_message: lead.message || \"no message\",\n      q1: client.q1, q2: client.q2, q3: client.q3,\n      meeting_type: client.meeting_type,\n      price_guidance: client.price_guidance,\n    } },\n  },\n} }];"
+      },
+      "id": "a3",
+      "name": "Pick client + build call",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.vapi.ai/call",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.vapiPayload) }}",
+        "options": {}
+      },
+      "id": "a4",
+      "name": "Start AI call (Vapi)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Credential: Header Auth, name 'Authorization', value 'Bearer <VAPI private key>'."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, callId: $json.id, message: 'Calling you now from ' + $('Pick client + build call').first().json.business_name }) }}",
+        "options": {}
+      },
+      "id": "a5",
+      "name": "Reply to form",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Lead form webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch client config (Google Sheet CSV)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch client config (Google Sheet CSV)": {
+      "main": [
+        [
+          {
+            "node": "Pick client + build call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick client + build call": {
+      "main": [
+        [
+          {
+            "node": "Start AI call (Vapi)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start AI call (Vapi)": {
+      "main": [
+        [
+          {
+            "node": "Reply to form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
