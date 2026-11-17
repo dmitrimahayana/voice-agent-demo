@@ -373,10 +373,10 @@ if (buildOnly) {
 
 // ---------- 3. health check (warning only) ----------
 try {
-  const res = await fetch(`${W}/`, { signal: AbortSignal.timeout(8000) });
-  console.log(`\nhealth: ${W}/ -> ${res.status}`);
+  const res = await fetch(`${W}/health`, { signal: AbortSignal.timeout(8000) });
+  console.log(`\nhealth: ${W}/health -> ${res.status}`);
 } catch (e) {
-  console.log(`\nhealth: WARNING ${W}/ unreachable (${e.message}). Agents are still set up, but calls will fail until it's up.`);
+  console.log(`\nhealth: WARNING ${W}/health unreachable (${e.message}). Agents are still set up, but calls will fail until it's up.`);
 }
 
 // ---------- API helpers ----------
@@ -537,7 +537,9 @@ if (wants("elevenlabs") && !ELEVEN) {
   // 6.4 Website widget: put the agent ID into the landing page (it's public, not a secret).
   const landingPath = p("demos/04-skincare-studio/landing/index.html");
   const landing = readFileSync(landingPath, "utf8");
-  const withId = landing.replace(/(<elevenlabs-convai agent-id=")[^"]*(")/, `$1${elAgentId}$2`);
+  const withId = landing
+    .replace(/(<elevenlabs-convai agent-id=")[^"]*(")/, `$1${elAgentId}$2`)
+    .replace(/(talk-to\?agent_id=)[A-Za-z0-9_]+/g, `$1${elAgentId}`); // the "Open Elena on ElevenLabs" fallback link
   if (withId !== landing) { writeFileSync(landingPath, withId); console.log(`landing page: widget -> agent ${elAgentId}`); }
 
   // 6.5 Phone number: assign EL_PHONE (or the only number) to the agent; import it from Twilio if needed.

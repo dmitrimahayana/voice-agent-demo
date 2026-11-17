@@ -3,155 +3,396 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Voice Agents by Dmitri Mahayana</title>
-<meta name="description" content="AI receptionists and voice agents that book jobs, not just answer calls. Retell, Vapi, GoHighLevel. White-label for agencies.">
+<title>Voice Agents by Dmitri Mahayana</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d5c58'/%3E%3Cg stroke='%23fff' stroke-width='5' stroke-linecap='round'%3E%3Cpath d='M16 26v12'/%3E%3Cpath d='M26 18v28'/%3E%3Cpath d='M36 22v20'/%3E%3Cpath d='M46 28v8'/%3E%3C/g%3E%3C/svg%3E">
+<meta name="description" content="AI receptionists that answer the phone and put the booking in your calendar. Built on Vapi, Retell and ElevenLabs by Dmitri Mahayana. Three working demos with video.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  // Apply the saved theme before first paint, so the page never flashes the wrong colours.
+  try { const t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 <style>
-  :root { --bg:#0b0f17; --card:#131a26; --text:#e8edf5; --muted:#9aa6b8; --accent:#4f8cff; --ok:#3ecf8e; --line:#223047; }
-  * { box-sizing:border-box; }
-  body { margin:0; font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--text); }
-  .wrap { max-width:1040px; margin:0 auto; padding:0 20px; }
-  header { padding:72px 0 40px; }
-  h1 { font-size:clamp(30px,5vw,48px); line-height:1.15; margin:0 0 16px; letter-spacing:-.02em; }
-  h2 { font-size:26px; margin:0 0 8px; }
-  p.lead { font-size:19px; color:var(--muted); max-width:680px; }
-  .btns { display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; }
-  .btn { display:inline-block; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:600; border:1px solid var(--line); color:var(--text); }
-  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
-  section { padding:48px 0; border-top:1px solid var(--line); }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-top:24px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; }
-  .card h3 { margin:0 0 6px; font-size:19px; }
-  .tag { display:inline-block; font-size:12px; color:var(--muted); border:1px solid var(--line); border-radius:99px; padding:2px 10px; margin:0 6px 10px 0; }
-  .phone { font-size:28px; font-weight:700; color:var(--ok); letter-spacing:.02em; }
-  ul { padding-left:20px; margin:8px 0 0; } li { margin:4px 0; }
-  .muted { color:var(--muted); }
-  video, .video-ph { width:100%; aspect-ratio:16/9; border-radius:12px; background:#000; border:1px solid var(--line); }
-  .video-ph { display:flex; align-items:center; justify-content:center; color:var(--muted); }
-  table { width:100%; border-collapse:collapse; margin-top:12px; } td, th { text-align:left; padding:8px; border-bottom:1px solid var(--line); }
-  footer { padding:40px 0 80px; color:var(--muted); border-top:1px solid var(--line); }
+  /*
+    Design notes (antislop R-31: one line per decision)
+    - Palette: warm paper + navy ink reads as a consultant's printed proposal; deep teal is the one accent, kept for calls to action.
+    - Type: Newsreader (editorial serif) carries the voice in headings and numerals; Public Sans keeps body and UI plain and legible.
+    - Motif: italic serif demo numbers plus the waveform mark (favicon, call panel) tie the page to "voice".
+    - Layout: demos alternate video side on wide screens so three similar items do not read as a card grid.
+    - Elevation: only the call panel has a shadow, because it holds the page's one live action.
+    - Theme: light by default (content-first page), with a working dark toggle that follows the system setting until chosen.
+    - Motion: hover and focus feedback only (MOTION 1); nothing animates on its own.
+  */
+  :root {
+    --bg: #f7f5f0; --surface: #ffffff; --soft: #efebe2; --ink: #1b2230; --muted: #4d5566;
+    --line: #ddd8cc; --line-strong: #8c8778; --accent: #1d5c58; --accent-ink: #ffffff; --accent-hover: #164845;
+    --shadow: 0 18px 40px -28px rgba(27, 34, 48, .45);
+    --radius: 10px; --radius-lg: 16px;
+    --serif: "Newsreader", Georgia, "Times New Roman", serif;
+    --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12161d; --surface: #1a2029; --soft: #1f2631; --ink: #ecebe6; --muted: #a9b0bc;
+      --line: #2c3440; --line-strong: #5d6675; --accent: #7cc4bb; --accent-ink: #0e1a19; --accent-hover: #9bd4cc;
+      --shadow: none; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12161d; --surface: #1a2029; --soft: #1f2631; --ink: #ecebe6; --muted: #a9b0bc;
+    --line: #2c3440; --line-strong: #5d6675; --accent: #7cc4bb; --accent-ink: #0e1a19; --accent-hover: #9bd4cc;
+    --shadow: none; color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.65 var(--sans); -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:hover { color: var(--accent-hover); }
+  a[href], button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+  .skip { position: absolute; left: 16px; top: -60px; background: var(--accent); color: var(--accent-ink); padding: 10px 14px; border-radius: var(--radius); z-index: 10; }
+  .skip:focus { top: 12px; }
+
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.12; letter-spacing: -0.01em; margin: 0; }
+  h1 { font-size: clamp(2.2rem, 1.4rem + 3.4vw, 4rem); }
+  h2 { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem); }
+  h3 { font-size: clamp(1.4rem, 1.2rem + 0.8vw, 1.8rem); }
+  p { margin: 0; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; text-align: center; min-height: 48px; padding: 12px 22px; border-radius: var(--radius); font: 600 1rem/1.25 var(--sans); text-decoration: none; border: 1.5px solid var(--line-strong); color: var(--ink); background: transparent; transition: background-color .15s, border-color .15s, color .15s; }
+  .btn:hover { border-color: var(--ink); color: var(--ink); background: var(--soft); }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--accent-ink); }
+
+  /* Header */
+  .site-header { border-bottom: 1px solid var(--line); }
+  .site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap; padding-block: 12px; }
+  .brand { font-family: var(--serif); font-size: 1.25rem; font-weight: 600; color: var(--ink); text-decoration: none; line-height: 1.2; padding: 6px 0; }
+  .brand span { display: block; font-family: var(--sans); font-size: .82rem; font-weight: 500; color: var(--muted); }
+  .brand:hover { color: var(--ink); }
+  .site-nav { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+  .site-nav a { color: var(--ink); text-decoration: none; padding: 10px 12px; border-radius: var(--radius); font-weight: 500; font-size: .95rem; min-height: 44px; display: inline-flex; align-items: center; }
+  .site-nav a:hover { background: var(--soft); color: var(--ink); }
+  .theme-toggle { min-height: 44px; padding: 8px 14px; margin-left: 8px; border-radius: var(--radius); border: 1.5px solid var(--line-strong); background: transparent; color: var(--ink); font: 500 .9rem var(--sans); transition: background-color .15s, border-color .15s; }
+  .theme-toggle:hover { background: var(--soft); border-color: var(--ink); }
+  .theme-toggle:active { transform: translateY(1px); }
+
+  /* Hero */
+  .hero { padding-block: clamp(44px, 8vw, 104px) clamp(48px, 7vw, 88px); }
+  .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .85fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
+  .hero .lead { font-size: clamp(1.08rem, 1rem + .4vw, 1.25rem); color: var(--muted); max-width: 38ch; margin-top: 22px; }
+  .hero .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  .call-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: clamp(22px, 3vw, 32px); box-shadow: var(--shadow); }
+  .call-panel .label { font-size: .95rem; color: var(--muted); }
+  .call-panel .number { display: inline-block; font-family: var(--serif); font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.5rem); font-weight: 600; color: var(--ink); text-decoration: none; margin: 4px 0; padding: 4px 0; letter-spacing: .01em; }
+  .call-panel .number:hover { color: var(--accent); }
+  .wave { display: block; width: 120px; height: 24px; color: var(--accent); margin: 12px 0 18px; }
+  .call-panel h2 { font: 600 1.05rem/1.3 var(--sans); letter-spacing: 0; margin-bottom: 8px; }
+  .call-panel ul { margin: 0; padding-left: 1.1em; color: var(--muted); }
+  .call-panel li { margin: 4px 0; }
+  .call-panel .fine { font-size: .9rem; color: var(--muted); margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+
+  /* Sections */
+  section { padding-block: clamp(56px, 8vw, 104px); border-top: 1px solid var(--line); }
+  .section-head { max-width: 640px; margin-bottom: clamp(32px, 5vw, 56px); }
+  .section-head p { margin-top: 14px; color: var(--muted); font-size: 1.08rem; }
+
+  /* Demos: alternating editorial rows */
+  .demo { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: center; }
+  .demo + .demo { margin-top: clamp(56px, 8vw, 96px); }
+  .demo:nth-of-type(even) .demo-media { order: 2; }
+  .demo-media iframe { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border: 0; border-radius: var(--radius-lg); background: #0b0d10; }
+  .demo-num { font-family: var(--serif); font-style: italic; font-size: 1.4rem; color: var(--accent); display: block; margin-bottom: 4px; }
+  .stack { font-size: .92rem; color: var(--muted); margin: 10px 0 16px; }
+  .demo-body > p:not(.stack) { color: var(--muted); }
+  .demo-body ul { margin: 16px 0 24px; padding-left: 1.1em; }
+  .demo-body li { margin: 6px 0; }
+  .note { font-size: .95rem; padding-top: 4px; }
+
+  /* Businesses: statement + list */
+  .split { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 72px); align-items: start; }
+  .split .section-head { margin-bottom: 0; }
+  .points { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .points li { padding: 20px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); gap: 6px 24px; }
+  .points strong { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; line-height: 1.3; }
+  .points span { color: var(--muted); }
+
+  /* Agencies */
+  .agency { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 64px); align-items: start; }
+  .agency ul { margin: 20px 0 0; padding-left: 1.1em; }
+  .agency li { margin: 8px 0; }
+  .price-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: clamp(20px, 3vw, 30px); }
+  .price-card h3 { font-size: 1.3rem; margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; }
+  caption { caption-side: bottom; text-align: left; padding-top: 14px; font-size: .95rem; color: var(--muted); }
+  td { padding: 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:last-child { text-align: right; font-weight: 600; white-space: nowrap; padding-left: 16px; }
+
+  /* About + contact */
+  .about { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 20px clamp(28px, 5vw, 72px); }
+  .about ul { margin: 0; padding-left: 1.1em; font-size: 1.08rem; }
+  .about li { margin: 0 0 12px; }
+  .contact { background: var(--soft); border-radius: var(--radius-lg); padding: clamp(28px, 5vw, 56px); display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .contact p { margin-top: 10px; color: var(--muted); max-width: 46ch; }
+  .contact .btn { overflow-wrap: anywhere; }
+
+  footer { border-top: 1px solid var(--line); padding-block: 24px 40px; color: var(--muted); font-size: .95rem; }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 8px 24px; flex-wrap: wrap; }
+  footer a { display: inline-flex; align-items: center; min-height: 44px; }
+
+  /* Medium widths: two-column areas stack before they get cramped */
+  @media (max-width: 960px) {
+    .hero .wrap { grid-template-columns: minmax(0, 1fr); }
+    .hero .lead { max-width: 52ch; }
+    .call-panel { max-width: 560px; }
+    .demo, .split, .agency, .about { grid-template-columns: minmax(0, 1fr); }
+    .demo:nth-of-type(even) .demo-media { order: 0; }
+    .demo-body { max-width: 640px; }
+  }
+  /* Phones */
+  @media (max-width: 600px) {
+    body { font-size: 16px; }
+    .site-nav { width: calc(100% + 16px); margin-inline: -8px; justify-content: space-between; }
+    .site-nav a { padding-inline: 8px; }
+    .theme-toggle { margin-left: 0; padding-inline: 10px; }
+    .hero .actions .btn, .demo-body .btn { width: 100%; }
+    .points li { grid-template-columns: minmax(0, 1fr); }
+    .contact { padding: 24px; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>AI receptionists and voice agents that book jobs, not just answer calls.</h1>
-    <p class="lead">Built on Retell, Vapi and GoHighLevel by a former Deloitte Intelligent Automation lead. Live demos below: call one now.</p>
-    <div class="btns">
-      <a class="btn primary" href="#agencies">I run an agency</a>
-      <a class="btn" href="#business">I run a business</a>
-      <a class="btn" href="#book">Book a 15-minute call</a>
-    </div>
-  </header>
+<a class="skip" href="#main">Skip to content</a>
 
-  <section id="try">
-    <h2>Call the demo now</h2>
-    <p class="muted">Bright Smile Dental is a fictional clinic. Ava answers 24/7, books on a live calendar and flags emergencies.</p>
-    <div class="grid">
-      <div class="card">
-        <span class="tag">Phone</span>
-        <div class="phone" id="demo-number">+1 (XXX) XXX-XXXX</div>
-        <p class="muted">Calls are capped at 3 minutes. Shared with prospects only, so please don't post it publicly.</p>
+<header class="site-header" id="top">
+  <div class="wrap">
+    <a class="brand" href="#top">Dmitri Mahayana <span>Voice agents for bookings</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="#demos">Demos</a>
+      <a href="#businesses">Businesses</a>
+      <a href="#agencies">Agencies</a>
+      <a href="#about">About</a>
+      <button class="theme-toggle" type="button" aria-pressed="false">Dark mode</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <h1>Voice agents that answer the phone and put the booking in your calendar.</h1>
+        <p class="lead">I build AI receptionists on Vapi, Retell and ElevenLabs, connected to the calendar and CRM a business already uses. Former Intelligent Automation lead at Deloitte.</p>
+        <div class="actions">
+          <a class="btn primary" href="tel:+19706455167">Call the demo line</a>
+          <a class="btn" href="#demos">Watch the three demos</a>
+        </div>
       </div>
-      <div class="card">
-        <span class="tag">Try saying</span>
+
+      <aside class="call-panel" aria-labelledby="try-heading">
+        <p class="label">Bright Smile Dental demo line</p>
+        <a class="number" href="tel:+19706455167">+1 (970) 645-5167</a>
+        <svg class="wave" viewBox="0 0 120 24" aria-hidden="true" focusable="false">
+          <g stroke="currentColor" stroke-width="3" stroke-linecap="round">
+            <path d="M2 10v4"/><path d="M10 7v10"/><path d="M18 3v18"/><path d="M26 8v8"/><path d="M34 5v14"/><path d="M42 10v4"/><path d="M50 6v12"/><path d="M58 2v20"/><path d="M66 7v10"/><path d="M74 10v4"/><path d="M82 5v14"/><path d="M90 8v8"/><path d="M98 4v16"/><path d="M106 9v6"/><path d="M114 11v2"/>
+          </g>
+        </svg>
+        <h2 id="try-heading">Ava answers. Try saying:</h2>
         <ul>
           <li>"Book me a cleaning next Tuesday."</li>
           <li>"Do you take Delta Dental?"</li>
           <li>"I broke a tooth and it really hurts."</li>
           <li>"Hola, necesito una cita."</li>
         </ul>
-        <p class="muted">Or use the talk button at the bottom right to call from your browser.</p>
+        <p class="fine">No phone handy? Press <strong>Talk to Ava</strong> at the bottom right to call from your browser. Bright Smile Dental is a fictional clinic, and calls end after 3 minutes.</p>
+      </aside>
+    </div>
+  </div>
+
+  <section id="demos" aria-labelledby="demos-heading">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="demos-heading">Three working demos</h2>
+        <p>Each one runs on real accounts: a live calendar, a real CRM and a call log. The videos show full calls from start to finish.</p>
       </div>
+
+      <article class="demo" aria-labelledby="demo1-title">
+        <div class="demo-media">
+          <iframe src="https://www.youtube-nocookie.com/embed/0bMISkOWwN0" title="Demo video: AI dental receptionist on Vapi" width="560" height="315" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="demo-body">
+          <span class="demo-num" aria-hidden="true">01</span>
+          <h3 id="demo1-title">Dental receptionist</h3>
+          <p class="stack">Vapi, Cal.com, Supabase, Google Sheets</p>
+          <p>Ava runs the front desk of a dental clinic around the clock, for practice owners who lose calls after hours.</p>
+          <ul>
+            <li>Books, moves and cancels appointments on a live Cal.com calendar</li>
+            <li>Answers insurance and price questions from the clinic's own information</li>
+            <li>Flags emergencies and hands the call to a person</li>
+          </ul>
+          <a class="btn primary" href="tel:+19706455167">Call Ava: +1 (970) 645-5167</a>
+        </div>
+      </article>
+
+      <article class="demo" aria-labelledby="demo2-title">
+        <div class="demo-media">
+          <iframe src="https://www.youtube-nocookie.com/embed/U2WU1QAy8kM" title="Demo video: home-services lead qualifier on Retell and GoHighLevel" width="560" height="315" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="demo-body">
+          <span class="demo-num" aria-hidden="true">02</span>
+          <h3 id="demo2-title">Home-services lead qualifier</h3>
+          <p class="stack">Retell, GoHighLevel</p>
+          <p>Sam qualifies plumbing and HVAC callers for agencies that run their clients on GoHighLevel.</p>
+          <ul>
+            <li>Writes the contact, custom fields, tags, pipeline stage and booking into GHL during the call</li>
+            <li>Recognises returning customers and moves their visit instead of booking a second one</li>
+            <li>Offers the maintenance plan and records the answer as a new opportunity</li>
+          </ul>
+          <p class="note">This demo runs inside a GoHighLevel account, so it's shown on video. A live walkthrough is available on a call.</p>
+        </div>
+      </article>
+
+      <article class="demo" aria-labelledby="demo3-title">
+        <div class="demo-media">
+          <iframe src="https://www.youtube-nocookie.com/embed/13t-6OFPAUU" title="Demo video: bilingual skin studio receptionist on ElevenLabs" width="560" height="315" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="demo-body">
+          <span class="demo-num" aria-hidden="true">03</span>
+          <h3 id="demo3-title">Skin studio receptionist, English and Spanish</h3>
+          <p class="stack">ElevenLabs Agents, Cal.com, Resend</p>
+          <p>Elena helps guests of a beauty skin care studio choose a treatment and book it, in English or Spanish.</p>
+          <ul>
+            <li>Asks about skin type and safety before recommending a treatment from the studio menu</li>
+            <li>Books on Cal.com and emails the reservation in the guest's language</li>
+            <li>Switches between English and Spanish in the middle of a call</li>
+          </ul>
+          <a class="btn primary" href="dewlane/">Talk to Elena in your browser</a>
+        </div>
+      </article>
     </div>
   </section>
 
-  <section id="demos">
-    <h2>Three demos, three buyer problems</h2>
-    <div class="grid">
-      <div class="card">
-        <span class="tag">Vapi</span><span class="tag">Cal.com</span>
-        <h3>AI dental receptionist</h3>
-        <p class="muted">Answers every call, books, reschedules and cancels, answers insurance and price questions, and routes emergencies.</p>
-        <div class="video-ph">Demo video: add your Loom embed</div>
+  <section id="businesses" aria-labelledby="business-heading">
+    <div class="wrap split">
+      <div class="section-head">
+        <h2 id="business-heading">For businesses that miss calls</h2>
+        <p>Clinics, studios and home-service companies lose bookings at night, at lunch and whenever the front desk is busy. A voice agent picks up those calls.</p>
       </div>
-      <div class="card">
-        <span class="tag">Retell</span><span class="tag">GoHighLevel</span>
-        <h3>Home-services lead qualifier</h3>
-        <p class="muted">Qualifies plumbing and HVAC callers and writes contact, custom fields, tags, pipeline stage and booking into GHL during the call.</p>
-        <div class="video-ph">Demo video: add your Loom embed</div>
-      </div>
-      <div class="card">
-        <span class="tag">Vapi</span><span class="tag">n8n</span><span class="tag">White-label</span>
-        <h3>Speed-to-lead callback</h3>
-        <p class="muted">A web lead gets an AI call within 30 seconds. One template serves many businesses, each set up from one spreadsheet row.</p>
-        <div class="video-ph">Demo video: add your Loom embed</div>
-      </div>
+      <ul class="points">
+        <li><strong>Every call answered</strong><span>Nights, weekends, lunch breaks and busy periods. No voicemail and no hold music.</span></li>
+        <li><strong>Bookings in your calendar</strong><span>Cal.com, GoHighLevel, practice-management systems like GoodX, or your own booking API.</span></li>
+        <li><strong>Live in about 7 days</strong><span>Script, integration, 20+ test calls, then a launch call with you. You own the accounts.</span></li>
+      </ul>
     </div>
   </section>
 
-  <section id="agencies">
-    <h2>For agencies: white-label voice AI, delivered under your brand</h2>
-    <div class="grid">
-      <div class="card">
-        <h3>What you get</h3>
+  <section id="agencies" aria-labelledby="agency-heading">
+    <div class="wrap agency">
+      <div>
+        <h2 id="agency-heading">For agencies: voice AI under your brand</h2>
         <ul>
           <li>Your brand on everything. I stay invisible to your client.</li>
-          <li>GHL snapshot plus agent config, cloned per client.</li>
+          <li>A GHL snapshot plus agent config, cloned per client.</li>
           <li>48-hour turnaround for each new client clone.</li>
           <li>Call logs and summaries your client can see.</li>
         </ul>
       </div>
-      <div class="card">
+      <div class="price-card">
         <h3>Per-client pricing</h3>
         <table>
-          <tr><td>Starter setup</td><td>$500</td></tr>
-          <tr><td>Standard setup (booking + CRM)</td><td>$750</td></tr>
-          <tr><td>Advanced setup (custom integrations)</td><td>$1,000</td></tr>
-          <tr><td>Monitoring and tuning</td><td>$150/month</td></tr>
+          <caption>Call minutes are billed at cost by the platform to your account.</caption>
+          <tbody>
+            <tr><td>Starter setup</td><td>$500</td></tr>
+            <tr><td>Standard setup (booking + CRM)</td><td>$750</td></tr>
+            <tr><td>Advanced setup (custom integrations)</td><td>$1,000</td></tr>
+            <tr><td>Monitoring and tuning</td><td>$150/month</td></tr>
+          </tbody>
         </table>
-        <p class="muted">Call minutes are billed at cost by the platform to your account.</p>
       </div>
     </div>
   </section>
 
-  <section id="business">
-    <h2>For businesses: stop losing calls after hours</h2>
-    <div class="grid">
-      <div class="card"><h3>Answers every call</h3><p class="muted">Nights, weekends, lunch breaks, busy periods. No voicemail, no hold music.</p></div>
-      <div class="card"><h3>Books into your calendar</h3><p class="muted">Cal.com, GoHighLevel, practice-management systems like GoodX, or your own booking API.</p></div>
-      <div class="card"><h3>Live in about 7 days</h3><p class="muted">Script, integration, 20+ test calls, then a launch call with you. You own the accounts.</p></div>
+  <section id="about" aria-labelledby="about-heading">
+    <div class="wrap about">
+      <h2 id="about-heading">Why work with me</h2>
+      <ul>
+        <li>Former lead in Deloitte's Intelligent Automation teams.</li>
+        <li>Top Rated on Upwork, $60K+ earned.</li>
+        <li>Production Retell integration with the GoodX booking system.</li>
+      </ul>
     </div>
   </section>
 
-  <section id="proof">
-    <h2>Why work with me</h2>
-    <ul>
-      <li>Former Lead in Deloitte's Intelligent Automation teams.</li>
-      <li>Top Rated on Upwork, $60K+ earned.</li>
-      <li>Production Retell integration with the GoodX booking system.</li>
-    </ul>
+  <section id="contact" aria-labelledby="contact-heading">
+    <div class="wrap">
+      <div class="contact">
+        <div>
+          <h2 id="contact-heading">Talk about your project</h2>
+          <p>Tell me about your calls, your calendar and what the agent should handle. I'll reply with a time for a 15-minute call.</p>
+        </div>
+        <a class="btn primary" href="mailto:dmitri.mahayana@gmail.com?subject=Voice%20agent%20project">Email me: dmitri.mahayana@gmail.com</a>
+      </div>
+    </div>
   </section>
+</main>
 
-  <section id="book">
-    <h2>Book a 15-minute call</h2>
-    <p><a class="btn primary" href="https://cal.com/YOUR-USERNAME/15min">Pick a time</a></p>
-  </section>
+<footer>
+  <div class="wrap">
+    <p>Demo businesses are fictional. Built by Dmitri Mahayana.</p>
+    <a href="#top">Back to top</a>
+  </div>
+</footer>
 
-  <footer>Demo businesses are fictional. Built by Dmitri Mahayana.</footer>
-</div>
-
-<!-- Vapi web call button (uses the PUBLIC key only; safe on a static page). -->
 <script>
-  const VAPI_PUBLIC_KEY = "YOUR_VAPI_PUBLIC_KEY";
-  const VAPI_ASSISTANT_ID = "YOUR_DENTAL_ASSISTANT_ID";
+  // Theme toggle: follows the system setting until the visitor picks one; the choice is remembered on this device.
+  (function () {
+    const btn = document.querySelector(".theme-toggle");
+    const root = document.documentElement;
+    const media = matchMedia("(prefers-color-scheme: dark)");
+    const isDark = () => (root.dataset.theme ? root.dataset.theme === "dark" : media.matches);
+    const sync = () => { const d = isDark(); btn.textContent = d ? "Light mode" : "Dark mode"; btn.setAttribute("aria-pressed", String(d)); };
+    btn.addEventListener("click", () => {
+      root.dataset.theme = isDark() ? "light" : "dark";
+      try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+      sync();
+    });
+    media.addEventListener("change", sync);
+    sync();
+  })();
+</script>
+
+<!-- Vapi web call button for Ava (PUBLIC key only; safe on a static page). Stays hidden until the key is set. -->
+<script>
+  const VAPI_PUBLIC_KEY = "a192c4e5-32e3-4015-b8f8-bb2abe27b097";
+  const VAPI_ASSISTANT_ID = "a918134e-c027-4bad-87d8-c053b4491de7"; // Demo 1 dental assistant (Ava)
   (function (d, t) {
     if (VAPI_PUBLIC_KEY.startsWith("YOUR_")) return;
     var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
-    g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+    g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@1.1.10/dist/assets/index.js"; // pinned, not @latest
     g.defer = true; g.async = true;
     s.parentNode.insertBefore(g, s);
+    // Labelled pill in the page's teal (#2a756f: white text 5.4:1, 3:1+ against both themes), bottom right so it never covers the hero.
+    var phoneIcon = "https://unpkg.com/lucide-static@0.321.0/icons/phone.svg";
     g.onload = function () {
-      window.vapiSDK.run({ apiKey: VAPI_PUBLIC_KEY, assistant: VAPI_ASSISTANT_ID, config: { idle: { title: "Talk to Ava", subtitle: "AI receptionist demo" } } });
+      window.vapiSDK.run({
+        apiKey: VAPI_PUBLIC_KEY,
+        assistant: VAPI_ASSISTANT_ID,
+        config: {
+          position: "bottom-right",
+          offset: "24px",
+          width: "56px",
+          height: "56px",
+          idle: { color: "rgb(42, 117, 111)", type: "pill", title: "Talk to Ava", subtitle: "Call from your browser", icon: phoneIcon },
+          loading: { color: "rgb(42, 117, 111)", type: "pill", title: "Connecting to Ava...", subtitle: "Allow the microphone", icon: phoneIcon },
+          active: { color: "rgb(143, 52, 52)", type: "pill", title: "End the call", subtitle: "Talking to Ava", icon: "https://unpkg.com/lucide-static@0.321.0/icons/phone-off.svg" }
+        }
+      });
     };
   })(document, "script");
 </script>

@@ -28,7 +28,7 @@ Vapi, Retell or ElevenLabs agent ──tool calls──▶ Cloudflare Worker (fu
 - `scripts/setup-agents.mjs`: the one script for agents. It builds the agent configs (Vapi, Retell, ElevenLabs) from the Markdown prompts plus the tool definitions inside it, then creates or updates the agents in place (IDs in `.agents.json`). Rerun it after any prompt or tool change. `--build-only` just writes the JSON, with no API calls.
 - `supabase/schema.sql`: Demo 1 member list and booking list.
 - `sheets/call-log.gs`: free Google Apps Script that logs every call to a sheet.
-- `hub/`: the static demo landing page, with the demo number and a browser call button.
+- `hub/`: the public showcase page (Demos 1, 2 and 4 with their videos). The Worker serves it at `/`, and Demo 4's studio page (`demos/04-skincare-studio/landing/`) at `/dewlane/`. `scripts/build-site.mjs` copies both into `site/` before every `wrangler dev`/`wrangler deploy` (`[build]` + `[assets]` in `wrangler.toml`), so one deploy ships the API and the pages.
 - `docs/`: `LEARNING-PATH.md` (start here to learn it step by step), `ARCHITECTURE.md` (reference), Upwork entries and the video script.
 
 ## ElevenLabs (Demo 4): configuration and process flow
@@ -225,7 +225,7 @@ export K=<your WEBHOOK_SECRET>
 
 | Test | Command | Expect |
 |---|---|---|
-| Health | `curl $W/` | `{"ok":true,...}` |
+| Health | `curl $W/health` | `{"ok":true,...}` |
 | Auth | `curl -X POST "$W/vapi/tools?demo=learn&key=wrong" -d '{}'` | `401` |
 | Practice tool | `curl -X POST "$W/vapi/tools?demo=learn&key=$K" -H 'content-type: application/json' -d '{"message":{"type":"tool-calls","toolCallList":[{"id":"1","function":{"name":"get_time","arguments":{}}}]}}'` | current time |
 | Demo 1 calendar | same, with `demo=dental` and `"name":"check_availability","arguments":{"date":"2026-11-17"}` | slots with `say` text |
@@ -338,7 +338,7 @@ VAPI_OUTBOUND_PHONE_NUMBER_ID = "<phone-number-id>"     # number id from 6.4
 ```
 `wrangler dev` reloads on save.
 
-**6.7 Check:** `curl $W/` prints `{"ok":true,...}`, and the 6.4 list shows the dental assistant ID next to your number.
+**6.7 Check:** `curl $W/health` prints `{"ok":true,...}`, and the 6.4 list shows the dental assistant ID next to your number.
 
 **6.8 Demo 4 (ElevenLabs).** There is no manual curl path: tools, knowledge base and agent reference each other by ID, so use the script (`--only=elevenlabs` runs just this part). First set `CALCOM_SKIN_EVENT_TYPE_ID` (and `EMAIL_FROM` if you use Resend) in `wrangler.toml`; see [demos/04-skincare-studio](demos/04-skincare-studio).
 ```bash
@@ -356,7 +356,7 @@ It also writes the agent ID into `demos/04-skincare-studio/landing/index.html` (
 |---|---|---|
 | A | `cd ~/Documents/ai-agent-workflow/voice-agent/functions && npx wrangler dev` | `Ready on http://localhost:8787` |
 | B | `cloudflared tunnel run --url http://localhost:8787 voice-dev` | `Registered tunnel connection` |
-| C | `export W=https://dev.your-domain.com K=<WEBHOOK_SECRET>` then `curl $W/` | `{"ok":true,...}` |
+| C | `export W=https://dev.your-domain.com K=<WEBHOOK_SECRET>` then `curl $W/health` | `{"ok":true,...}` |
 
 During a call, every tool the agent uses goes Vapi/Retell → `https://dev.your-domain.com` → tunnel → Terminal A. **Watch Terminal A**: each tool call and any error is printed there.
 
@@ -443,7 +443,7 @@ Then run all 19 calls in [demos/02-ghl-home-services/test-script.md](demos/02-gh
 | Symptom | Look at | Usual fix |
 |---|---|---|
 | Agent says it "can't check right now" | Terminal A error | fix the handler or the API key in `.dev.vars` |
-| Nothing appears in Terminal A | `curl $W/`; tool URLs in the agent | tunnel down, or agent built with `YOUR-WORKER` (redo step 6) |
+| Nothing appears in Terminal A | `curl $W/health`; tool URLs in the agent | tunnel down, or agent built with `YOUR-WORKER` (redo step 6) |
 | `401` in Terminal A | `key=` in the tool URL | `WEBHOOK_SECRET` in `.dev.vars` ≠ the one used in the build |
 | Agent says wrong things | the transcript in Vapi/Retell > Call Logs, or ElevenLabs > Agents > Conversations | edit `prompt.md` |
 
@@ -482,9 +482,9 @@ cd functions && npx wrangler deploy   # ships the updated wrangler.toml IDs
 ```
 This updates the same agents (saved in `.agents.json`) to call the workers.dev URL. The prod `WEBHOOK_SECRET` (`wrangler secret put`) must equal the one in `functions/.dev.vars`, or pass `K=<prod secret>`. To go back to local testing, rerun it with `W=https://dev.your-domain.com`.
 
-Also set `ENDPOINT` in `landing/index.html` and the Vapi public key and assistant ID in `hub/index.html`.
+Also set `ENDPOINT` in `demos/03-speed-to-lead/landing/index.html` (if you use Demo 3) and the Vapi public key in `hub/index.html` (for the browser call button), then `npx wrangler deploy` to publish the pages.
 
-Demo 4: the script above also moves the ElevenLabs tools to the workers.dev URL. The post-call webhook is set in the dashboard, so change its URL there too: **ElevenLabs > Agents > Settings > Post-call webhook** → `https://voice-agent-functions.<your-subdomain>.workers.dev/elevenlabs/events?demo=skin`. To share the studio page, deploy `demos/04-skincare-studio/landing/` (for example with `npx wrangler pages deploy ../demos/04-skincare-studio/landing`).
+Demo 4: the script above also moves the ElevenLabs tools to the workers.dev URL. The post-call webhook is set in the dashboard, so change its URL there too: **ElevenLabs > Agents > Settings > Post-call webhook** → `https://voice-agent-functions.<your-subdomain>.workers.dev/elevenlabs/events?demo=skin`. The studio page is deployed with the Worker at `<W>/dewlane/`; nothing else to publish.
 
 Close the tunnel. From here nothing runs on your Mac.
 
@@ -494,13 +494,13 @@ Close the tunnel. From here nothing runs on your Mac.
 
 ```bash
 export W=https://voice-agent-functions.<your-subdomain>.workers.dev
-curl $W/                                  # health
+curl $W/health                            # health
 cd ~/Documents/ai-agent-workflow/voice-agent/functions && npx wrangler tail         # live logs while you test
 ```
 1. Re-run the curl table from step 5 against `$W`.
 2. Call the Twilio number and run a few calls from each test script.
 3. Check the Google Sheet has `booked` and `call_ended` rows (tab `demo4` for ElevenLabs), Supabase `bookings` and `members` have the Demo 1 rows, Demo 4 reservation emails arrived, and GHL has the Demo 2 records.
-4. Optional: deploy the hub page with `npx wrangler pages deploy ../hub`.
+4. Open the public pages: `$W/` (showcase with the demo videos) and `$W/dewlane/` (Talk to Elena). They're deployed with the Worker; after editing `hub/index.html` or the Dewlane page, run `npx wrangler deploy` again.
 
 **Done when:** all four test scripts pass against prod, with your laptop closed.
 
@@ -531,6 +531,8 @@ cd ~/Documents/ai-agent-workflow/voice-agent/functions && npx wrangler tail     
 
 | Path | Used by |
 |---|---|
+| `GET /` and `GET /dewlane/` | public pages (showcase, Demo 4 studio page), served from `site/` |
+| `GET /health` | health check |
 | `POST /vapi/tools?demo=dental\|lead&key=…` | Vapi function tools (demos 1, 3) |
 | `POST /vapi/events?demo=…&key=…` | Vapi end-of-call report |
 | `POST /retell/tools/<name>?demo=home&key=…` | Retell custom functions (demo 2) |

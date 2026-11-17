@@ -3,6 +3,15 @@ name = "voice-agent-functions"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 
+# Public pages served by this Worker (/ = demo showcase, /dewlane/ = Demo 4 page). Requests that don't
+# match a file (all the API routes) go to src/index.ts. scripts/build-site.mjs assembles site/ before
+# every `wrangler dev` / `wrangler deploy`; edit hub/ and demos/04-skincare-studio/landing/, not site/.
+[build]
+command = "node ../scripts/build-site.mjs"
+
+[assets]
+directory = "../site"
+
 # Non-secret settings. Secrets go in with `wrangler secret put <NAME>` (see .dev.vars.example).
 [vars]
 TIMEZONE = "America/New_York"

@@ -8,7 +8,7 @@
 //   POST /elevenlabs/events?demo=skin                     ElevenLabs post-call webhook (HMAC-signed)
 //   POST /leads                                           Demo 3 form submit -> outbound call
 //   POST /calcom/webhook                                  Cal.com booking events -> Supabase (Demo 1)
-//   GET  /                                                health check
+//   GET  /health                                          health check (GET / is the showcase page in ../site)
 import type { Env, Tool, ToolArgs, ToolContext } from "./env";
 import { handleCalcomWebhook } from "./handlers/calcomWebhook";
 import { bookMeeting, dentalTools } from "./handlers/dental";
@@ -220,7 +220,8 @@ export default {
         headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "POST", "access-control-allow-headers": "content-type" },
       });
     }
-    if (req.method === "GET" && url.pathname === "/") return json({ ok: true, service: "voice-agent-functions" });
+    // "/" itself is the showcase page (static assets in ../site); /health is the API health check.
+    if (req.method === "GET" && (url.pathname === "/health" || url.pathname === "/")) return json({ ok: true, service: "voice-agent-functions" });
     if (req.method !== "POST") return json({ error: "not found" }, 404);
 
     try {
