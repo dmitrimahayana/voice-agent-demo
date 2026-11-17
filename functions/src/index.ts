@@ -1,9 +1,11 @@
-// One Cloudflare Worker serves the tool calls and call events for all three demos.
+// One Cloudflare Worker serves the tool calls and call events for all four demos.
 //
 //   POST /vapi/tools?demo=dental|home|lead&key=SECRET     Vapi "tool-calls" server messages
 //   POST /vapi/events?demo=...&key=SECRET                 Vapi end-of-call-report
 //   POST /retell/tools/<name>?demo=home&key=SECRET        Retell custom function (one URL per function)
 //   POST /retell/events?demo=home&key=SECRET              Retell agent webhook (call_analyzed)
+//   POST /elevenlabs/tools/<name>?demo=skin&key=SECRET    ElevenLabs server tool (one URL per tool, Demo 4)
+//   POST /elevenlabs/events?demo=skin                     ElevenLabs post-call webhook (HMAC-signed)
 //   POST /leads                                           Demo 3 form submit -> outbound call
 //   POST /calcom/webhook                                  Cal.com booking events -> Supabase (Demo 1)
 //   GET  /                                                health check
@@ -13,8 +15,9 @@ import { bookMeeting, dentalTools } from "./handlers/dental";
 import { homeServicesTools } from "./handlers/homeServices";
 import { handleLead, logOutcome } from "./handlers/leads";
 import { learnTools } from "./handlers/learn";
+import { skincareTools } from "./handlers/skincare";
 import { logRow } from "./lib/sheets";
-import { json, str } from "./lib/util";
+import { hmacSha256Hex, json, str } from "./lib/util";
 
 const TOOLSETS: Record<string, Record<string, Tool>> = {
   dental: dentalTools,
@@ -23,6 +26,8 @@ const TOOLSETS: Record<string, Record<string, Tool>> = {
   // Practice toolset for docs/LEARNING-PATH.md (no API keys needed).
   learn: learnTools,
   lead: { check_calendar: dentalTools.check_availability, book_meeting: bookMeeting, log_outcome: logOutcome },
+  // Demo 4: Dewlane Skin Studio on ElevenLabs (own Cal.com event type, reservation emails).
+  skin: skincareTools,
 };
 
 async function runTool(demo: string, name: string, args: ToolArgs, tc: ToolContext): Promise<string> {
@@ -126,6 +131,84 @@ async function retellEvents(req: Request, env: Env, ctx: ExecutionContext, demo:
   return new Response(null, { status: 204 });
 }
 
+// ---------- ElevenLabs ----------
+// Server (webhook) tools: one URL per tool, the body is exactly the tool's request_body_schema.
+// ElevenLabs adds no call metadata by itself, so each tool schema maps two extra body fields to
+// system dynamic variables: caller_id <- system__caller_id, conversation_id <- system__conversation_id.
+
+/** system__caller_id is null on browser/test calls; it can arrive as null, "", "None" or "null". */
+const elCaller = (v: unknown) => {
+  const s = str(v);
+  return s && !/^(none|null|undefined|unknown)$/i.test(s) ? s : undefined;
+};
+
+async function elevenTool(req: Request, env: Env, ctx: ExecutionContext, demo: string, name: string) {
+  const { caller_id, conversation_id, ...args } = (await req.json()) as ToolArgs;
+  const callerNumber = elCaller(caller_id);
+  if (!callerNumber) console.warn(`elevenlabs ${demo}/${name}: no caller_id (browser test call?)`);
+  const tc: ToolContext = { env, ctx, platform: "elevenlabs", callId: str(conversation_id), callerNumber };
+  return json({ result: await runTool(demo, name, args, tc) });
+}
+
+/**
+ * ElevenLabs-Signature: t=<unix seconds>,v0=<hex hmac>[,v0=...]. HMAC-SHA256 of "<t>.<raw body>"
+ * with the webhook secret; any v0 may match; reject timestamps older than 30 minutes.
+ */
+async function validElevenSignature(secret: string, raw: string, header: string | null): Promise<boolean> {
+  if (!header) return false;
+  const parts = header.split(",").map((p) => p.trim().split("="));
+  const t = parts.find(([k]) => k === "t")?.[1];
+  const sigs = parts.filter(([k]) => k === "v0").map(([, v]) => v?.toLowerCase());
+  if (!t || !sigs.length || Math.abs(Date.now() / 1000 - Number(t)) > 30 * 60) return false;
+  return sigs.includes(await hmacSha256Hex(secret, `${t}.${raw}`));
+}
+
+interface ElevenPostCall {
+  type: string; // "post_call_transcription" | "post_call_audio" | "call_initiation_failure"
+  data?: {
+    agent_id?: string;
+    conversation_id?: string;
+    status?: string;
+    metadata?: { call_duration_secs?: number; phone_call?: { external_number?: string } };
+    analysis?: {
+      transcript_summary?: string;
+      call_successful?: string;
+      data_collection_results?: Record<string, { value?: unknown }>;
+    };
+    conversation_initiation_client_data?: { dynamic_variables?: Record<string, unknown> };
+    failure_reason?: string;
+  };
+}
+
+async function elevenEvents(req: Request, url: URL, env: Env, ctx: ExecutionContext, demo: string) {
+  const raw = await req.text();
+  // Signed by ElevenLabs when the secret is set; otherwise the URL must carry ?key= like the other routes.
+  const ok = env.ELEVENLABS_WEBHOOK_SECRET
+    ? await validElevenSignature(env.ELEVENLABS_WEBHOOK_SECRET, raw, req.headers.get("elevenlabs-signature"))
+    : authorized(req, url, env);
+  if (!ok) return json({ error: "unauthorized" }, 401);
+
+  const { type, data } = JSON.parse(raw) as ElevenPostCall;
+  if (data && (type === "post_call_transcription" || type === "call_initiation_failure")) {
+    const caller = elCaller(data.conversation_initiation_client_data?.dynamic_variables?.system__caller_id)
+      ?? elCaller(data.metadata?.phone_call?.external_number);
+    // Data collection fields (booked, language, reason...) and the success evaluation, as one readable string.
+    const collected = Object.entries(data.analysis?.data_collection_results ?? {})
+      .filter(([, r]) => r?.value != null && r.value !== "")
+      .map(([k, r]) => `${k}=${str(r.value)}`);
+    const details = type === "call_initiation_failure"
+      ? str(data.failure_reason, "call initiation failed")
+      : [`success=${str(data.analysis?.call_successful, "unknown")}`, ...collected].join(" | ");
+    ctx.waitUntil(logRow(env, {
+      demo, platform: "elevenlabs", callId: str(data.conversation_id), caller,
+      event: type === "call_initiation_failure" ? "call_failed" : "call_ended", details,
+      summary: data.analysis?.transcript_summary, durationSec: data.metadata?.call_duration_secs,
+    }));
+  }
+  // ElevenLabs disables a webhook after repeated non-200 answers, so always acknowledge.
+  return json({ ok: true });
+}
+
 // ---------- router ----------
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -145,6 +228,8 @@ export default {
       if (url.pathname === "/leads") return await handleLead(req, env, ctx);
       // Verified by Cal.com's HMAC signature (CALCOM_WEBHOOK_SECRET), not ?key=.
       if (url.pathname === "/calcom/webhook") return await handleCalcomWebhook(req, env);
+      // Verified by the ElevenLabs HMAC signature (ELEVENLABS_WEBHOOK_SECRET), or ?key= when that's unset.
+      if (url.pathname === "/elevenlabs/events") return await elevenEvents(req, url, env, ctx, demo);
 
       if (!authorized(req, url, env)) return json({ error: "unauthorized" }, 401);
       if (url.pathname === "/vapi/tools") return await vapiTools(req, env, ctx, demo);
@@ -152,6 +237,8 @@ export default {
       if (url.pathname === "/retell/events") return await retellEvents(req, env, ctx, demo);
       const m = url.pathname.match(/^\/retell\/tools\/([\w-]+)$/);
       if (m) return await retellTool(req, env, ctx, demo, m[1]);
+      const e = url.pathname.match(/^\/elevenlabs\/tools\/([\w-]+)$/);
+      if (e) return await elevenTool(req, env, ctx, demo, e[1]);
       return json({ error: "not found" }, 404);
     } catch (err) {
       console.error(err);

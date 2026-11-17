@@ -23,6 +23,10 @@ GHL_STAGE_EMERGENCY = "YOUR_STAGE_ID_EMERGENCY"
 GHL_MEMBERSHIP_PIPELINE_ID = "YOUR_MEMBERSHIP_PIPELINE_ID"
 GHL_MEMBERSHIP_STAGE_INTERESTED = "YOUR_STAGE_ID_INTERESTED"
 PLAN_PRICE_PER_YEAR = "149"
+# Demo 4 (ElevenLabs skin studio): its own Cal.com event type (falls back to CALCOM_EVENT_TYPE_ID when empty)
+CALCOM_SKIN_EVENT_TYPE_ID = ""
+# Sender of the reservation emails (Resend). Domain must be verified in Resend; onboarding@resend.dev only reaches your own Resend account email.
+EMAIL_FROM = "Dewlane Skin Studio <bookings@your-domain.com>"
 # Demo 3 (Vapi outbound)
 VAPI_SPEED_TO_LEAD_ASSISTANT_ID = "YOUR_SPEED_TO_LEAD_ASSISTANT_ID"
 VAPI_OUTBOUND_PHONE_NUMBER_ID = "YOUR_VAPI_PHONE_NUMBER_ID"

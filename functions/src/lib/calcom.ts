@@ -12,10 +12,10 @@ function headers(env: Env, version: string): HeadersInit {
   };
 }
 
-/** Free slot start times (ISO) on the given day and the next one. */
-export async function availableSlots(env: Env, date: string): Promise<string[]> {
+/** Free slot start times (ISO) on the given day and the next one. eventTypeId defaults to Demo 1's. */
+export async function availableSlots(env: Env, date: string, eventTypeId = env.CALCOM_EVENT_TYPE_ID): Promise<string[]> {
   const { start, end } = dayWindow(date);
-  const qs = new URLSearchParams({ eventTypeId: env.CALCOM_EVENT_TYPE_ID, start, end, timeZone: env.TIMEZONE });
+  const qs = new URLSearchParams({ eventTypeId, start, end, timeZone: env.TIMEZONE });
   const res = await fetchJson<{ data: Record<string, { start: string }[]> }>(`${BASE}/slots?${qs}`, {
     headers: headers(env, "2024-09-04"),
   });
@@ -27,13 +27,15 @@ export interface Attendee { name: string; phone: string; email: string }
 /** Extra keys saved on the booking so it can be found again by phone or member ID. */
 export type BookingMeta = Record<string, string>;
 
-export async function createBooking(env: Env, startIso: string, a: Attendee, notes: string, meta: BookingMeta = {}) {
+export async function createBooking(
+  env: Env, startIso: string, a: Attendee, notes: string, meta: BookingMeta = {}, eventTypeId = env.CALCOM_EVENT_TYPE_ID,
+) {
   const res = await fetchJson<{ data: { uid: string; start: string } }>(`${BASE}/bookings`, {
     method: "POST",
     headers: headers(env, "2024-08-13"),
     body: JSON.stringify({
       start: new Date(startIso).toISOString(),
-      eventTypeId: Number(env.CALCOM_EVENT_TYPE_ID),
+      eventTypeId: Number(eventTypeId),
       attendee: { name: a.name, email: a.email, timeZone: env.TIMEZONE, phoneNumber: a.phone || undefined },
       bookingFieldsResponses: { notes },
       metadata: { source: "voice-agent-demo", ...meta },
@@ -52,9 +54,9 @@ export interface Booking {
   bookingFieldsResponses?: Record<string, unknown>;
 }
 
-/** All upcoming bookings on the clinic's event type, soonest first. */
-export async function upcomingBookings(env: Env): Promise<Booking[]> {
-  const qs = new URLSearchParams({ eventTypeId: env.CALCOM_EVENT_TYPE_ID, status: "upcoming", sortStart: "asc", take: "100" });
+/** All upcoming bookings on an event type (default: Demo 1's clinic), soonest first. */
+export async function upcomingBookings(env: Env, eventTypeId = env.CALCOM_EVENT_TYPE_ID): Promise<Booking[]> {
+  const qs = new URLSearchParams({ eventTypeId, status: "upcoming", sortStart: "asc", take: "100" });
   const res = await fetchJson<{ data: Booking[] }>(`${BASE}/bookings?${qs}`, { headers: headers(env, "2024-08-13") });
   return res.data ?? [];
 }

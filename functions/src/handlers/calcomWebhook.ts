@@ -7,7 +7,7 @@
 //   Secret: same value as CALCOM_WEBHOOK_SECRET
 import type { Env } from "../env";
 import { memberByPhone, supabaseEnabled, updateBooking, upsertBooking, type BookingRow } from "../lib/supabase";
-import { digits, json } from "../lib/util";
+import { digits, hmacSha256Hex, json } from "../lib/util";
 
 interface CalPayload {
   uid?: string;
@@ -25,10 +25,7 @@ const phoneKey = (p: string) => digits(p).slice(-10);
 
 async function validSignature(secret: string, raw: string, sig: string | null): Promise<boolean> {
   if (!sig) return false;
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(raw)));
-  const hex = [...mac].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return hex === sig.trim().toLowerCase();
+  return (await hmacSha256Hex(secret, raw)) === sig.trim().toLowerCase();
 }
 
 export async function handleCalcomWebhook(req: Request, env: Env): Promise<Response> {

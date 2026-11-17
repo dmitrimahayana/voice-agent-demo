@@ -1,0 +1,105 @@
+{
+  "studio": {
+    "name": "Dewlane Skin Studio",
+    "address": "820 Coral Way, Suite 2, Miami, FL 33145",
+    "parking": "Free parking in the building garage, level 1.",
+    "hours": "Tuesday to Saturday 10:00 AM to 7:00 PM. Closed Sunday and Monday.",
+    "estheticians": "Camila Reyes (acne and sensitive skin), Jordan Blake (anti-aging and peels)."
+  },
+  "services": [
+    {
+      "id": "consultation",
+      "name": "Free Skin Consultation",
+      "minutes": 30,
+      "price": 0,
+      "skin_types": ["dry", "oily", "combination", "normal", "sensitive"],
+      "concerns": [],
+      "description": "A skin analysis with an esthetician and a personal treatment and home-care plan. Best when the guest is unsure or has several concerns.",
+      "prep": "Come with a clean face if you can, and bring a list of the products you use now.",
+      "not_suitable": ""
+    },
+    {
+      "id": "hydrating_facial",
+      "name": "Signature Hydrating Facial",
+      "minutes": 60,
+      "price": 120,
+      "skin_types": ["dry", "normal", "combination", "sensitive"],
+      "concerns": ["dryness", "dehydration", "dullness", "tightness"],
+      "description": "Deep cleanse, gentle exfoliation, hyaluronic mask and facial massage for plump, glowing skin.",
+      "prep": "No special preparation. Skip at-home exfoliants the day before.",
+      "not_suitable": ""
+    },
+    {
+      "id": "clarifying_facial",
+      "name": "Clarifying Acne Facial",
+      "minutes": 60,
+      "price": 135,
+      "skin_types": ["oily", "combination", "normal"],
+      "concerns": ["acne", "breakouts", "blackheads", "congestion", "oiliness", "large pores"],
+      "description": "Purifying cleanse, extractions, salicylic treatment and a calming clay mask for clearer skin.",
+      "prep": "Avoid retinol and strong acids for 2 days before.",
+      "not_suitable": "Not while taking isotretinoin (Accutane) or within 6 months of stopping it."
+    },
+    {
+      "id": "calming_facial",
+      "name": "Calming Barrier Facial",
+      "minutes": 60,
+      "price": 125,
+      "skin_types": ["sensitive", "dry", "normal", "combination"],
+      "concerns": ["redness", "sensitivity", "irritation", "reactive skin"],
+      "description": "Fragrance-free facial with soothing botanicals and a cooling mask that repairs the skin barrier.",
+      "prep": "Pause any new active products for 3 days before.",
+      "not_suitable": ""
+    },
+    {
+      "id": "glow_peel",
+      "name": "Brightening Glow Peel",
+      "minutes": 45,
+      "price": 150,
+      "skin_types": ["normal", "combination", "oily", "dry"],
+      "concerns": ["dark spots", "uneven tone", "dullness", "texture", "sun damage"],
+      "description": "Professional lactic and mandelic acid peel that evens tone and brightens.",
+      "prep": "Stop retinol and exfoliating acids 3 days before. No waxing or sunburn on the face that week.",
+      "not_suitable": "Not during pregnancy, on sunburned or broken skin, or within 6 months of isotretinoin."
+    },
+    {
+      "id": "microneedling",
+      "name": "Collagen Microneedling",
+      "minutes": 60,
+      "price": 250,
+      "skin_types": ["normal", "combination", "oily", "dry"],
+      "concerns": ["fine lines", "wrinkles", "acne scars", "texture", "large pores", "firmness"],
+      "description": "Collagen induction treatment for smoother texture, softer lines and acne scars. Best as a series of 3.",
+      "prep": "Stop retinol 5 days before. Avoid blood thinners like aspirin for 3 days unless prescribed. Arrive without makeup.",
+      "not_suitable": "Not during pregnancy, with active breakouts or cold sores, or within 6 months of isotretinoin."
+    },
+    {
+      "id": "dermaplaning",
+      "name": "Dermaplaning Glow",
+      "minutes": 45,
+      "price": 85,
+      "skin_types": ["normal", "dry", "combination"],
+      "concerns": ["dullness", "texture", "peach fuzz", "makeup not sitting well"],
+      "description": "Gentle blade exfoliation that removes dead skin and peach fuzz for an instant smooth glow.",
+      "prep": "Stop retinol 3 days before.",
+      "not_suitable": "Not with active acne breakouts."
+    },
+    {
+      "id": "led_addon",
+      "name": "LED Light Therapy (add-on)",
+      "minutes": 20,
+      "price": 45,
+      "skin_types": ["dry", "oily", "combination", "normal", "sensitive"],
+      "concerns": ["acne", "breakouts", "redness", "fine lines"],
+      "description": "Blue or red LED light added to any facial: blue calms breakouts, red supports collagen.",
+      "prep": "No special preparation.",
+      "not_suitable": "Not while taking light-sensitising medication."
+    }
+  ],
+  "policies": [
+    "New guests: arrive 10 minutes early to fill in a short skin questionnaire.",
+    "Cancellations and changes: please give 24 hours' notice. Late cancellations may be charged 50% of the treatment.",
+    "Payment: card or cash at the visit. Packages of 3 microneedling sessions save 15%.",
+    "Aftercare for peels and microneedling: no makeup for 24 hours, SPF 30 or higher every day, no retinol for 5 days."
+  ]
+}

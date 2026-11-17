@@ -10,7 +10,14 @@ SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/xxx/exec
 SUPABASE_SERVICE_KEY=sb_secret_xxx
 # Cal.com > Settings > Developer > Webhooks > secret (same value on both sides)
 CALCOM_WEBHOOK_SECRET=change-me
-# Sheet tab names: Demo 1 dental, Demo 2 home services, Demo 3 speed-to-lead (created if missing)
+# Demo 4 (ElevenLabs). The API key is read by scripts/setup-agents.mjs only, not by the Worker.
+ELEVENLABS_API_KEY=sk_xxx
+# ElevenLabs > Agents > Settings > Post-call webhook > signing secret (Worker checks the HMAC signature)
+ELEVENLABS_WEBHOOK_SECRET=wsec_xxx
+# Resend (resend.com) API key for Demo 4 reservation emails. Leave empty to let Cal.com send its own confirmation instead.
+RESEND_API_KEY=
+# Sheet tab names: Demo 1 dental, Demo 2 home services, Demo 3 speed-to-lead, Demo 4 skin studio (created if missing)
 SHEET_TAB_DEMO1=demo1
 SHEET_TAB_DEMO2=demo2
 SHEET_TAB_DEMO3=demo3
+SHEET_TAB_DEMO4=demo4

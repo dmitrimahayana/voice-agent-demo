@@ -20,7 +20,7 @@ There are two interchangeable back ends. Pick one, or show both:
 ## Setup (about 1 day)
 1. Import `clients.csv` into a Google Sheet, then File > Share > Publish to web > CSV. Copy the link.
 2. **Outbound number:** use the Twilio number you already imported into Vapi for Demo 1. Copy its phone number ID from Vapi into `VAPI_OUTBOUND_PHONE_NUMBER_ID` (Worker) or the Code node settings (n8n). If the Twilio account is still a trial, it can only call verified numbers and plays a trial notice first.
-3. Build and push the assistant (`node scripts/build-configs.mjs --push`), then copy its ID.
+3. Create the assistant: `W=… TRANSFER_NUMBER=… PHONE=… node scripts/setup-agents.mjs --only=vapi`. It writes the assistant ID and phone number ID into `functions/wrangler.toml` for the Worker; for n8n, copy them from the output.
 4. Set `ENDPOINT` in `landing/index.html` and open it. Pick a business, enter your own phone and submit.
 
 ## What to show in the video

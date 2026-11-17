@@ -128,7 +128,7 @@ voice-agent/
 │           ├── sheets.ts
 │           └── util.ts
 │
-├── scripts/build-configs.mjs    Turns prompt.md files into importable agent JSON
+├── scripts/setup-agents.mjs     Builds agent configs from prompt.md and creates/updates the agents
 ├── sheets/call-log.gs           Google Apps Script that receives log rows
 ├── hub/index.html               Public demo landing page
 └── docs/                        This guide, Upwork entries, video script
@@ -178,11 +178,11 @@ Demo 3 reuses the dental calendar tools under new names (`check_calendar`, `book
 | `n8n-workflow.json` (demo 3) | The same flow as `/leads`, but visual, for agencies who live in n8n or Make. |
 | `landing/index.html` (demo 3) | The form that triggers the callback, with a live timer to show the speed. |
 
-### `scripts/build-configs.mjs`: config as code
+### `scripts/setup-agents.mjs`: config as code
 Prompts are long, and editing them inside a JSON string or a dashboard text box is painful and leaves no history. So:
 1. You edit `prompt.md` (readable, and diffs nicely in git).
-2. The script reads it, adds the tool definitions (name, description, JSON schema) and your `WORKER_URL` plus secret, and writes the platform JSON.
-3. With `--push` it creates the agents through the Vapi and Retell APIs.
+2. The script reads it, adds the tool definitions (name, description, JSON schema) and your Worker URL (`W`) plus secret, and writes the platform JSON.
+3. It then creates or updates the agents through the Vapi, Retell and ElevenLabs APIs, saving their IDs in `.agents.json` so reruns update instead of duplicating. `--build-only` stops after step 2; `--only=vapi|retell|elevenlabs` limits it to some platforms.
 
 This is also how you'll clone for agency clients: copy a demo folder, change the prompt, and rebuild.
 
@@ -256,9 +256,9 @@ Demo 2 has the same shape with Retell and GoHighLevel. Demo 3 starts the other w
 
 **Add a tool** (for example `get_directions`):
 1. Write the function in the right `handlers/*.ts` file and add it to that file's tools object.
-2. Add its name, description and schema to the matching list in `scripts/build-configs.mjs`.
+2. Add its name, description and schema to the matching list in `scripts/setup-agents.mjs`.
 3. Mention when to use it in `prompt.md`.
-4. Rebuild the configs and redeploy the Worker (`npx wrangler deploy`).
+4. Rerun `node scripts/setup-agents.mjs` and redeploy the Worker (`npx wrangler deploy`).
 
 **Clone Demo 2 for an agency client:** copy the folder, edit `prompt.md` (name, service area, price list), load the GHL snapshot into their sub-account, put their IDs in the Worker vars (or a second Worker), rebuild, then run the test script.
 
@@ -275,6 +275,6 @@ cp .dev.vars.example .dev.vars    # fill in real keys
 npm install
 npx wrangler dev                  # Worker on http://localhost:8787
 cloudflared tunnel --url http://localhost:8787   # public URL for Vapi/Retell to reach
-WORKER_URL=<tunnel url> WEBHOOK_SECRET=<same> node ../scripts/build-configs.mjs
+W=<tunnel url> TRANSFER_NUMBER=<your phone> node ../scripts/setup-agents.mjs   # secret and keys from .dev.vars
 ```
 Then make a web call from the Vapi or Retell dashboard and watch the requests in the `wrangler dev` terminal.

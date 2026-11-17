@@ -16,6 +16,13 @@ export function str(v: unknown, fallback = ""): string {
   return typeof v === "string" ? v.trim() : v == null ? fallback : String(v);
 }
 
+/** Hex HMAC-SHA256 of `message`, for checking webhook signatures (Cal.com, ElevenLabs). */
+export async function hmacSha256Hex(secret: string, message: string): Promise<string> {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message)));
+  return [...mac].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export function digits(phone: string): string {
   return phone.replace(/\D/g, "");
 }

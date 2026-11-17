@@ -9,13 +9,22 @@ export interface Env {
   SUPABASE_SERVICE_KEY: string;
   // Signing secret of the Cal.com webhook (optional but recommended)
   CALCOM_WEBHOOK_SECRET?: string;
-  // Sheet tab per demo (set in .dev.vars; default demo1/demo2/demo3)
+  // HMAC secret of the ElevenLabs post-call webhook (Demo 4). Without it /elevenlabs/events falls back to ?key=.
+  ELEVENLABS_WEBHOOK_SECRET?: string;
+  // Resend API key for Demo 4's reservation emails. Without it Cal.com sends its own confirmation email instead.
+  RESEND_API_KEY?: string;
+  // Sheet tab per demo (set in .dev.vars; default demo1/demo2/demo3/demo4)
   SHEET_TAB_DEMO1?: string;
   SHEET_TAB_DEMO2?: string;
   SHEET_TAB_DEMO3?: string;
+  SHEET_TAB_DEMO4?: string;
   // vars
   TIMEZONE: string;
   CALCOM_EVENT_TYPE_ID: string;
+  // Demo 4 (skin studio) Cal.com event type; falls back to CALCOM_EVENT_TYPE_ID when unset
+  CALCOM_SKIN_EVENT_TYPE_ID?: string;
+  // Sender of Demo 4's reservation emails, e.g. "Dewlane Skin Studio <bookings@your-domain.com>" (domain verified in Resend)
+  EMAIL_FROM?: string;
   BOOKING_EMAIL_DOMAIN: string;
   SUPABASE_URL: string;
   GHL_LOCATION_ID: string;
@@ -33,11 +42,11 @@ export interface Env {
   CLIENTS_CSV_URL: string;
 }
 
-/** Context every tool gets, whichever platform (Vapi or Retell) made the call. */
+/** Context every tool gets, whichever platform (Vapi, Retell or ElevenLabs) made the call. */
 export interface ToolContext {
   env: Env;
   ctx: ExecutionContext;
-  platform: "vapi" | "retell";
+  platform: "vapi" | "retell" | "elevenlabs";
   callId: string;
   callerNumber?: string;
 }

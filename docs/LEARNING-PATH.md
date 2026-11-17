@@ -136,11 +136,11 @@ Update the tool URL in Vapi to the workers.dev URL with your new secret. Watch l
 
 Goal: stop clicking in dashboards.
 
-1. Read `scripts/build-configs.mjs`: the tool lists, `vapiAssistant()`, and where `prompt.md` is read.
+1. Read section 2 of `scripts/setup-agents.mjs` ("build the configs"): the tool lists, `vapiAssistant()`, and where `prompt.md` is read.
 2. Run:
    ```bash
    cd ~/Documents/ai-agent-workflow/voice-agent
-   WORKER_URL=https://voice-agent-functions.<you>.workers.dev WEBHOOK_SECRET=<secret> node scripts/build-configs.mjs
+   W=https://voice-agent-functions.<you>.workers.dev K=<secret> node scripts/setup-agents.mjs --build-only
    ```
 3. Open `demos/01-dental-receptionist/assistant.vapi.json` and find the prompt, the 4 function tools with your URL, the transfer tool, `maxDurationSeconds: 180` and the `server.url` for events.
 
@@ -158,7 +158,7 @@ Goal: stop clicking in dashboards.
           "toolCallList":[{"id":"1","function":{"name":"check_availability","arguments":{"date":"2026-11-17"}}}]}}'
    ```
    You should see real slots with `say` text.
-3. Create the assistant: `VAPI_API_KEY=… RETELL_API_KEY=x WORKER_URL=… WEBHOOK_SECRET=… node scripts/build-configs.mjs --push` (it stops after Vapi if the Retell key is fake, which is fine for now). Or paste from the JSON in the dashboard.
+3. Create the assistant: `VAPI_API_KEY=… W=… K=… TRANSFER_NUMBER=… node scripts/setup-agents.mjs --only=vapi` (no Retell key needed yet). Or paste from the JSON in the dashboard.
 4. Talk in the browser and book a cleaning. Check that it appears in Cal.com.
 5. Read `handlers/dental.ts` and `lib/calcom.ts` and find where `say` and `slot_iso` are made.
 
@@ -202,7 +202,7 @@ Goal: learn that the platforms differ in shape, not in idea.
 
 1. Start the GHL trial (14 days), then follow `demos/02-ghl-home-services/ghl-setup.md` step by step.
 2. Fill the `GHL_*` vars, set `GHL_API_TOKEN`, deploy, then curl `upsert_contact` first (see the Retell body in `ARCHITECTURE.md`) and confirm the contact appears in GHL.
-3. Push the Retell agent (`--push` with a real `RETELL_API_KEY`) and web-call it with `test-script.md`.
+3. Push the Retell agent (`node scripts/setup-agents.mjs --only=retell` with a real `RETELL_API_KEY`) and web-call it with `test-script.md`.
 4. Read `handlers/homeServices.ts`: how `contact_id` is returned so the LLM can pass it into later calls (the Worker keeps no memory between requests).
 
 **Checkpoint:** during a web call, the contact, fields, tags, appointment and opportunity appear in GHL.
