@@ -1,0 +1,32 @@
+{
+  "currency": "USD",
+  "notes": "Read by the get_quote Code node. Edit, then run `node n8n/build.mjs` and re-import the tools workflow (see n8n-setup.md).",
+  "price": {
+    "base": 79,
+    "per_bedroom": 24,
+    "per_bathroom": 19,
+    "pets_fee": 15,
+    "minimum": 119,
+    "round_to": 5
+  },
+  "labor_hours": {
+    "base": 1.5,
+    "per_bedroom": 0.5,
+    "per_bathroom": 0.5,
+    "two_person_crew_above": 4
+  },
+  "types": {
+    "Standard": { "price_multiplier": 1.0, "hours_multiplier": 1.0, "includes": "dusting, vacuuming and mopping, kitchen counters and outside of appliances, bathrooms, beds made, trash out" },
+    "Deep": { "price_multiplier": 1.6, "hours_multiplier": 1.5, "includes": "everything in Standard plus baseboards, inside the oven and fridge, cabinet fronts, light switches, door frames and window sills" },
+    "Move-in/Move-out": { "price_multiplier": 1.9, "hours_multiplier": 1.8, "includes": "an empty home top to bottom: inside every cabinet, drawer and closet, all appliances inside and out, baseboards and windows from the inside" },
+    "Post-construction": { "price_multiplier": 2.4, "hours_multiplier": 2.2, "includes": "fine dust removal from every surface, vents and fixtures, paint and sticker residue, floors cleaned twice" }
+  },
+  "frequency": {
+    "One-time": { "discount": 0, "visits_per_year": 1 },
+    "Weekly": { "discount": 0.2, "visits_per_year": 52 },
+    "Biweekly": { "discount": 0.15, "visits_per_year": 26 },
+    "Monthly": { "discount": 0.1, "visits_per_year": 12 }
+  },
+  "recurring_types": ["Standard"],
+  "limits": { "max_bedrooms": 6, "max_bathrooms": 5 }
+}

@@ -1,0 +1,2950 @@
+{
+  "id": "brightnestTools1",
+  "name": "Demo 5: Brightnest tools (Retell -> GHL)",
+  "nodes": [
+    {
+      "id": "ca304c41-caea-59b7-a191-3d6b843205dc",
+      "position": [
+        0,
+        0
+      ],
+      "name": "Retell tool call",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "brightnest-tools",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "33b69887-e162-5ab7-a3e0-172c5d3b6221"
+    },
+    {
+      "id": "d0f2d070-64da-5584-ac02-e12d302656de",
+      "position": [
+        260,
+        0
+      ],
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52e3a87b-32a6-5e0f-a000-d57c2b104012",
+              "name": "authorized",
+              "type": "boolean",
+              "value": "={{ !$env.BRIGHTNEST_WEBHOOK_KEY || $json.query.key === $env.BRIGHTNEST_WEBHOOK_KEY }}"
+            },
+            {
+              "id": "6dbdd022-a80b-5378-a58d-0562108a3a35",
+              "name": "sheetTab",
+              "type": "string",
+              "value": "={{ $env.SHEET_TAB || 'demo5' }}"
+            },
+            {
+              "id": "e8fdaa82-4ca5-5bfc-a5f7-8459a3b238f5",
+              "name": "ghlBase",
+              "type": "string",
+              "value": "={{ $env.GHL_BASE_URL || 'https://services.leadconnectorhq.com' }}"
+            },
+            {
+              "id": "dc19bd52-ee8e-5de9-a4d0-b8f5d49fa387",
+              "name": "timezone",
+              "type": "string",
+              "value": "={{ $env.TIMEZONE || 'America/Denver' }}"
+            },
+            {
+              "id": "00d84d8e-ea4e-508f-a298-43adaa56cf44",
+              "name": "locationId",
+              "type": "string",
+              "value": "={{ $env.GHL_LOCATION_ID }}"
+            },
+            {
+              "id": "9c7efa79-058a-5192-ac59-82ab2025a99c",
+              "name": "calendarId",
+              "type": "string",
+              "value": "={{ $env.GHL_CALENDAR_ID }}"
+            },
+            {
+              "id": "c62ffe72-f41d-5b33-ac64-d457596945e7",
+              "name": "pipelineId",
+              "type": "string",
+              "value": "={{ $env.GHL_PIPELINE_ID }}"
+            },
+            {
+              "id": "7bb36c57-d90b-50a8-a32f-20ecddaef858",
+              "name": "stageNew",
+              "type": "string",
+              "value": "={{ $env.GHL_STAGE_NEW }}"
+            },
+            {
+              "id": "20f15018-6b14-5693-abdb-c550e40f313b",
+              "name": "stageBooked",
+              "type": "string",
+              "value": "={{ $env.GHL_STAGE_BOOKED }}"
+            },
+            {
+              "id": "7c6a1a38-12a7-5be8-aba0-bbace6b1d04e",
+              "name": "stageAttention",
+              "type": "string",
+              "value": "={{ $env.GHL_STAGE_ATTENTION }}"
+            },
+            {
+              "id": "f4288d99-d414-5c4c-a719-14e3154c1dd2",
+              "name": "recurringPipelineId",
+              "type": "string",
+              "value": "={{ $env.GHL_RECURRING_PIPELINE_ID }}"
+            },
+            {
+              "id": "f77678b8-2e9c-5c5a-a779-e308a07c8658",
+              "name": "recurringStageInterested",
+              "type": "string",
+              "value": "={{ $env.GHL_RECURRING_STAGE_INTERESTED }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "Settings come from the container environment (demos/05-n8n-house-cleaning/.env)."
+    },
+    {
+      "id": "4ed17542-127a-512e-a1ad-a4ec18e0f996",
+      "position": [
+        520,
+        0
+      ],
+      "name": "Key OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e58e045c-2e83-5fe2-aa07-12504f873066",
+              "leftValue": "={{ $json.authorized }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "29a6b4e6-596c-5f58-a3d3-e4a69436d06a",
+      "position": [
+        780,
+        0
+      ],
+      "name": "401 Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: 'unauthorized' }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "6a936c43-c762-5adc-ac0c-9e5d2f3d0f65",
+      "position": [
+        780,
+        180
+      ],
+      "name": "Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- normalize.js ----\n// Reads Retell's custom-function request ({call, name, args}) and checks the required arguments.\n// `stop` set = answer right away with that text instead of running the tool.\nconst hook = $(\"Retell tool call\").first().json;\nconst body = hook.body ?? {};\nconst call = body.call ?? {};\nconst args = body.args && typeof body.args === \"object\" ? body.args : body;\nconst tool = str(hook.query?.tool) || str(body.name);\nconst caller = str(call.direction === \"outbound\" ? call.to_number : call.from_number);\nconst phone = toE164(str(args.phone) || caller);\n\nconst NEED = {\n  lookup_customer: [[], \"\"],\n  upsert_contact: [[\"name\"], \"Need the caller's full name first.\"],\n  get_quote: [[\"cleaning_type\", \"bedrooms\", \"bathrooms\"], \"Need the cleaning type and the number of bedrooms and bathrooms first.\"],\n  check_calendar: [[], \"\"],\n  book_cleaning: [[\"contact_id\", \"slot_iso\"], \"Missing contact_id or slot_iso. Call upsert_contact (or lookup_customer) and check_calendar first.\"],\n  reschedule_cleaning: [[\"contact_id\", \"slot_iso\"], \"Missing contact_id or slot_iso. Call lookup_customer and check_calendar first.\"],\n  add_note_and_tags: [[\"contact_id\"], \"Missing contact_id. Call upsert_contact or lookup_customer first.\"],\n  record_recurring_interest: [[\"contact_id\"], \"Missing contact_id. Call upsert_contact or lookup_customer first.\"],\n};\n\nlet stop = \"\";\nif (!NEED[tool]) stop = `Unknown tool \"${tool}\".`;\nelse if (NEED[tool][0].some((k) => str(args[k]) === \"\")) stop = NEED[tool][1];\nelse if (tool === \"lookup_customer\" && !phone) stop = \"This call has no caller ID. Ask for the mobile number on their account, read it back, then call lookup_customer again with phone.\";\nelse if (tool === \"upsert_contact\" && !phone) stop = \"Need the caller's mobile number too. Ask for it, read it back, then call upsert_contact again with phone.\";\n\nreturn [{ json: { tool, args, phone, callId: str(call.call_id), callerNumber: caller, stop, result: stop } }];\n"
+      }
+    },
+    {
+      "id": "91a3a07c-a005-5f60-a558-18a60ac08458",
+      "position": [
+        1040,
+        0
+      ],
+      "name": "Ready?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3ee18812-9595-5494-a8fe-2646e2bfc78e",
+              "leftValue": "={{ !$json.stop }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "af36854e-5ab4-5888-a3b6-e4bf543d9bb9",
+      "position": [
+        1300,
+        0
+      ],
+      "name": "Which tool?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e3148854-1383-55e7-a7ce-ffcdcc713f76",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "lookup_customer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lookup_customer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6a16ffd7-6f7c-58fa-a5d8-1093b8296045",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "upsert_contact",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "upsert_contact"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "413adb87-e875-5a34-a42f-49cd9bc6cc63",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "get_quote",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "get_quote"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "82150059-a842-5e31-aadc-1ed55e5ae25e",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "check_calendar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "check_calendar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0aa79621-40e2-55cf-a3de-7905cbf520d2",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "book_cleaning",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "book_cleaning"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1a5ec9c4-2731-58f1-a603-f4fcbc63c4f9",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "reschedule_cleaning",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reschedule_cleaning"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "951c81c6-1f9b-5979-afb3-e2f991ebd408",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "add_note_and_tags",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "add_note_and_tags"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "379f01ef-51ae-5304-a3ef-213bc7d56bf1",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "record_recurring_interest",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "record_recurring_interest"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4aebfdd7-07cf-5e7b-a438-a916e660c164",
+      "position": [
+        2340,
+        0
+      ],
+      "name": "Reply",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $json.result }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "8c25d447-5fdd-5982-add7-80aa6c7906c9",
+      "position": [
+        1820,
+        0
+      ],
+      "name": "Reply: system down",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: \"The booking system is not responding right now. Apologise, take the caller's name and number, and promise a callback within the hour.\" }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "99f3f1ee-0083-512b-a8a2-1e93d8f90915",
+      "position": [
+        2080,
+        0
+      ],
+      "name": "Error row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- error-row.js ----\n// After the fallback reply: log which tool failed and why. Built here because n8n expressions refuse a key named \"caller\".\nconst err = $input.first().json.error;\nreturn [{ json: { row: sheetRow(\"tool_error\", `${reqOf().tool}: ${str(err?.message ?? err, \"unknown error\").slice(0, 300)}`) } }];\n"
+      }
+    },
+    {
+      "id": "4590d4f4-bc0d-52c3-a256-aa4b1ff5219a",
+      "position": [
+        2340,
+        180
+      ],
+      "name": "Log: tool error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SHEETS_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.row) }}",
+        "options": {
+          "timeout": 8000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Optional: SHEETS_WEBHOOK_URL (sheets/call-log.gs). Without it this node fails quietly."
+    },
+    {
+      "id": "8ca1981f-ae90-51e7-af51-0dbdc1b032bf",
+      "position": [
+        1560,
+        0
+      ],
+      "name": "GHL: find contact by phone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/search/duplicate' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "={{ $('Config').first().json.locationId }}"
+            },
+            {
+              "name": "number",
+              "value": "={{ $('Normalize').first().json.phone }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "10c99b8c-9bda-5e51-ab14-edfc8592230e",
+      "position": [
+        1820,
+        180
+      ],
+      "name": "Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dd2e44f2-2233-58bb-ad93-0ac1bdfc7576",
+              "leftValue": "={{ !!$json.contact }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4d4c1184-93a2-5111-a4c7-692abcc87408",
+      "position": [
+        2080,
+        180
+      ],
+      "name": "Reply: new client",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- lookup-new.js ----\n// lookup_customer, not found.\nreturn [{ json: { result: JSON.stringify({ found: false, instruction: \"New client. Continue the normal flow: collect the details, then call upsert_contact.\" }) } }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "ae018377-def0-59bf-a8db-76e12ded1c49",
+      "position": [
+        2080,
+        360
+      ],
+      "name": "GHL: open jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config').first().json.ghlBase + '/opportunities/search' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "location_id",
+              "value": "={{ $('Config').first().json.locationId }}"
+            },
+            {
+              "name": "contact_id",
+              "value": "={{ $('GHL: find contact by phone').first().json.contact.id }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ 'open' }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "97423388-37c3-5db8-a19f-be537806361a",
+      "position": [
+        2340,
+        360
+      ],
+      "name": "GHL: contact appointments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/' + $('GHL: find contact by phone').first().json.contact.id + '/appointments' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "4b9aeb2b-3e30-5de4-a421-aae05c74e084",
+      "position": [
+        2600,
+        0
+      ],
+      "name": "GHL: stage names",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config').first().json.ghlBase + '/opportunities/pipelines' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "={{ $('Config').first().json.locationId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "91fe5e9f-1ead-52ff-a626-d7f51658c3a5",
+      "position": [
+        2860,
+        0
+      ],
+      "name": "Reply: returning client",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- lookup-returning.js ----\n// lookup_customer, found: greet by name, next cleaning, open jobs.\nconst cfg = cfgOf();\nconst contact = $(\"GHL: find contact by phone\").first().json.contact;\nconst opps = $(\"GHL: open jobs\").first().json.opportunities ?? [];\nconst events = $(\"GHL: contact appointments\").first().json.events ?? [];\nconst pipelines = $input.first().json.pipelines ?? []; // empty if the stage-name lookup failed\nconst stages = Object.fromEntries(pipelines.flatMap((p) => (p.stages ?? []).map((s) => [s.id, s.name])));\n\nconst next = upcoming(events, cfg.timezone)[0];\nconst name = contact.firstName || contact.contactName || \"\";\nconst when = next ? `${spoken(next.startTime, cfg.timezone)}${next.endTime ? ` until ${spokenTime(next.endTime, cfg.timezone)}` : \"\"}` : \"\";\n\nconst result = JSON.stringify({\n  found: true,\n  contact_id: contact.id,\n  first_name: name,\n  is_recurring_client: (contact.tags ?? []).includes(\"recurring-client\"),\n  next_cleaning: next ? { appointment_id: next.id, say: when, title: next.title ?? \"\", hours: next.endTime ? Math.round((Date.parse(next.endTime) - Date.parse(next.startTime)) / 1_800_000) / 2 : 3 } : null,\n  open_jobs: opps.map((o) => ({ job: o.name, stage: stages[o.pipelineStageId] ?? \"open\" })),\n  instruction: next\n    ? \"Greet them by first name and tell them their next cleaning. Ask if it still works. To change it: check_calendar with hours = next_cleaning.hours, offer two times, then reschedule_cleaning with appointment_id. Use contact_id for every later tool; don't call upsert_contact.\"\n    : \"Greet them by first name. No cleaning is booked; help with what they need (get_quote, then book). Use contact_id for every later tool; don't call upsert_contact.\",\n});\n\nreturn [{ json: { contact_id: contact.id, result, row: sheetRow(\"returning_customer\", `${name} | next: ${next?.startTime ?? \"none\"}`) } }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "e1ee2e88-747b-518a-a8ea-8afe6383e0af",
+      "position": [
+        3120,
+        0
+      ],
+      "name": "Respond: returning client",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $('Reply: returning client').first().json.result }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "4f170e02-0e00-59d1-a2c2-dad9cfe81039",
+      "position": [
+        3380,
+        0
+      ],
+      "name": "Log: returning client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SHEETS_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Reply: returning client').first().json.row) }}",
+        "options": {
+          "timeout": 8000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Optional: SHEETS_WEBHOOK_URL (sheets/call-log.gs). Without it this node fails quietly."
+    },
+    {
+      "id": "80c3da47-84f1-55fa-af91-41fb287d30d4",
+      "position": [
+        3640,
+        0
+      ],
+      "name": "Tag: returning-customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/' + $('Reply: returning client').first().json.contact_id + '/tags' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: ['returning-customer'] }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "2a5eccbe-95ab-510e-af36-5215518b6d59",
+      "position": [
+        1560,
+        180
+      ],
+      "name": "Build contact",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- upsert-build.js ----\n// upsert_contact: the GHL /contacts/upsert body. Custom fields use the bare key (\"cleaning_type\"), not \"contact.cleaning_type\".\nconst cfg = cfgOf();\nconst req = reqOf();\nconst a = req.args;\nconst [firstName, ...rest] = str(a.name).split(/\\s+/);\nconst fields = {\n  cleaning_type: a.cleaning_type,\n  bedrooms: a.bedrooms,\n  bathrooms: a.bathrooms,\n  pets: a.pets,\n  frequency: a.frequency,\n  access_notes: a.access_notes,\n};\nreturn [{ json: { body: {\n  locationId: cfg.locationId,\n  firstName,\n  lastName: rest.join(\" \") || undefined,\n  phone: req.phone,\n  address1: str(a.address) || undefined,\n  postalCode: str(a.zip) || undefined,\n  source: \"AI Voice Agent (n8n)\",\n  tags: [\"ai-voice-lead\"],\n  customFields: Object.entries(fields).filter(([, v]) => str(v) !== \"\").map(([key, v]) => ({ key, field_value: str(v) })),\n} } }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "dc0b8a1d-36bc-5dee-a622-9cdfd5f46b12",
+      "position": [
+        1820,
+        360
+      ],
+      "name": "GHL: upsert contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/upsert' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "aa54be02-7408-5791-af76-a5a7b6b0a16a",
+      "position": [
+        2080,
+        540
+      ],
+      "name": "Reply: contact saved",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- upsert-reply.js ----\n// upsert_contact: reply with the contact_id; the opportunity is created after the reply.\nconst a = reqOf().args;\nconst contactId = $input.first().json.contact.id;\nreturn [{ json: {\n  contact_id: contactId,\n  opportunity: `${str(a.name)} - ${str(a.cleaning_type, \"cleaning\")} cleaning`,\n  result: JSON.stringify({ contact_id: contactId, instruction: \"Use this contact_id in every later tool call.\" }),\n} }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "fc89b4e6-c7ce-53aa-a51c-fcefa9590850",
+      "position": [
+        2340,
+        540
+      ],
+      "name": "Respond: contact saved",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $('Reply: contact saved').first().json.result }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "015716a5-d62c-53f2-a282-a2d4ce088bc3",
+      "position": [
+        2600,
+        180
+      ],
+      "name": "Opportunity: New lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/opportunities/upsert' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: $('Config').first().json.locationId, pipelineId: $('Config').first().json.pipelineId, pipelineStageId: $('Config').first().json.stageNew, contactId: $('Reply: contact saved').first().json.contact_id, name: $('Reply: contact saved').first().json.opportunity, status: 'open', monetaryValue: undefined }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "058428c9-0943-5879-a81d-8ca060995ae2",
+      "position": [
+        1560,
+        360
+      ],
+      "name": "Calculate quote",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\nconst PRICING = {\"currency\":\"USD\",\"notes\":\"Read by the get_quote Code node. Edit, then run `node n8n/build.mjs` and re-import the tools workflow (see n8n-setup.md).\",\"price\":{\"base\":79,\"per_bedroom\":24,\"per_bathroom\":19,\"pets_fee\":15,\"minimum\":119,\"round_to\":5},\"labor_hours\":{\"base\":1.5,\"per_bedroom\":0.5,\"per_bathroom\":0.5,\"two_person_crew_above\":4},\"types\":{\"Standard\":{\"price_multiplier\":1,\"hours_multiplier\":1,\"includes\":\"dusting, vacuuming and mopping, kitchen counters and outside of appliances, bathrooms, beds made, trash out\"},\"Deep\":{\"price_multiplier\":1.6,\"hours_multiplier\":1.5,\"includes\":\"everything in Standard plus baseboards, inside the oven and fridge, cabinet fronts, light switches, door frames and window sills\"},\"Move-in/Move-out\":{\"price_multiplier\":1.9,\"hours_multiplier\":1.8,\"includes\":\"an empty home top to bottom: inside every cabinet, drawer and closet, all appliances inside and out, baseboards and windows from the inside\"},\"Post-construction\":{\"price_multiplier\":2.4,\"hours_multiplier\":2.2,\"includes\":\"fine dust removal from every surface, vents and fixtures, paint and sticker residue, floors cleaned twice\"}},\"frequency\":{\"One-time\":{\"discount\":0,\"visits_per_year\":1},\"Weekly\":{\"discount\":0.2,\"visits_per_year\":52},\"Biweekly\":{\"discount\":0.15,\"visits_per_year\":26},\"Monthly\":{\"discount\":0.1,\"visits_per_year\":12}},\"recurring_types\":[\"Standard\"],\"limits\":{\"max_bedrooms\":6,\"max_bathrooms\":5}};\n// ---- quote.js ----\n// get_quote: price, time on site and recurring options from PRICING (pricing.json, inlined by build.mjs).\nconst a = reqOf().args;\nconst P = PRICING.price;\nconst H = PRICING.labor_hours;\nconst round = (n) => Math.round(n / P.round_to) * P.round_to;\n\nconst type = matchOption(PRICING.types, a.cleaning_type);\nconst asked = matchOption(PRICING.frequency, a.frequency) || \"One-time\";\nconst beds = Math.max(0, Math.round(Number(a.bedrooms) || 0));\nconst baths = Math.max(1, Math.round((Number(a.bathrooms) || 1) * 2) / 2); // half baths count as 0.5\nconst pets = /^(y|yes|true)$|dog|cat|pet/i.test(str(a.pets)) && !/^(no|none|false|0)$/i.test(str(a.pets));\n\nlet reply;\nlet row;\nif (!type) {\n  reply = { error: \"unknown_type\", instruction: \"Ask which type they want: Standard, Deep, Move-in/Move-out or Post-construction. Then call get_quote again.\" };\n} else if (beds > PRICING.limits.max_bedrooms || baths > PRICING.limits.max_bathrooms) {\n  reply = { custom_quote: true, instruction: \"Homes this size get a custom quote. Say a manager will call with a price today, then call add_note_and_tags with tag custom-quote.\" };\n  row = sheetRow(\"custom_quote\", `${type} | ${beds} bd ${baths} ba`);\n} else {\n  const T = PRICING.types[type];\n  const oneTime = Math.max(P.minimum, round((P.base + beds * P.per_bedroom + baths * P.per_bathroom) * T.price_multiplier + (pets ? P.pets_fee : 0)));\n  const canRecur = PRICING.recurring_types.includes(type);\n  const frequency = canRecur ? asked : \"One-time\";\n  const visit = round(oneTime * (1 - PRICING.frequency[frequency].discount));\n  const labor = (H.base + beds * H.per_bedroom + baths * H.per_bathroom) * T.hours_multiplier;\n  const crew = labor > H.two_person_crew_above ? 2 : 1;\n  const hours = Math.max(2, Math.ceil((labor / crew) * 2) / 2);\n  const per = frequency === \"One-time\" ? \"\" : ` a visit, ${frequency.toLowerCase()}, ${Math.round(PRICING.frequency[frequency].discount * 100)}% off`;\n  reply = {\n    cleaning_type: type,\n    frequency,\n    quote_total: visit,\n    hours,\n    crew_size: crew,\n    includes: T.includes,\n    say: `${type} cleaning for ${beds} bedrooms and ${baths} bathrooms: $${visit}${per}. ${crew === 2 ? \"A team of two\" : \"One cleaner\"}, about ${hours} hours on site.`,\n    recurring_options: canRecur && frequency === \"One-time\"\n      ? Object.entries(PRICING.frequency).filter(([k]) => k !== \"One-time\")\n          .map(([k, f]) => ({ frequency: k, visit_price: round(oneTime * (1 - f.discount)), discount_percent: Math.round(f.discount * 100) }))\n      : [],\n    note: asked !== frequency ? \"Recurring discounts apply to Standard cleanings only, so this is quoted as one-time.\" : undefined,\n    instruction: \"Say the price and the time on site. If they want to book: check_calendar, then book_cleaning with hours and quote_total.\",\n  };\n  row = sheetRow(\"quoted\", `${type} | ${beds} bd ${baths} ba | ${frequency} | $${visit} | ${hours} h`);\n}\n\nreturn [{ json: { result: JSON.stringify(reply), row: row ?? sheetRow(\"quote_question\", str(a.cleaning_type)) } }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "06697d23-b3e9-5029-a86d-6b9094da3833",
+      "position": [
+        1820,
+        540
+      ],
+      "name": "Respond: quote",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $('Calculate quote').first().json.result }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "542d128e-330e-581e-ad9e-b0c8dae11c23",
+      "position": [
+        2080,
+        720
+      ],
+      "name": "Log: quote",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SHEETS_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Calculate quote').first().json.row) }}",
+        "options": {
+          "timeout": 8000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Optional: SHEETS_WEBHOOK_URL (sheets/call-log.gs). Without it this node fails quietly."
+    },
+    {
+      "id": "5beb4f3e-9fb4-537c-a8d9-e6cf849e2e2b",
+      "position": [
+        1560,
+        540
+      ],
+      "name": "Calendar window",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- calendar-window.js ----\n// check_calendar: the free-slots window. From now (or the preferred day), 5 days; 2 days when a day was named.\nconst cfg = cfgOf();\nconst day = str(reqOf().args.preferred_day);\nconst dayStart = /^\\d{4}-\\d{2}-\\d{2}$/.test(day) ? Date.parse(ghlTimeToIso(`${day} 00:00:00`, cfg.timezone)) : NaN;\nconst from = Math.max(Date.now(), Number.isNaN(dayStart) ? 0 : dayStart);\nconst days = Number.isNaN(dayStart) ? 5 : 2;\nreturn [{ json: { startDate: String(from), endDate: String(from + days * 86_400_000) } }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "57433f73-6cc0-53c2-a65a-fe260f4e33bb",
+      "position": [
+        1820,
+        720
+      ],
+      "name": "GHL: free slots",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config').first().json.ghlBase + '/calendars/' + $('Config').first().json.calendarId + '/free-slots' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "startDate",
+              "value": "={{ $json.startDate }}"
+            },
+            {
+              "name": "endDate",
+              "value": "={{ $json.endDate }}"
+            },
+            {
+              "name": "timezone",
+              "value": "={{ $('Config').first().json.timezone }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "d923acee-0b57-544c-aeca-af4e5ff74b44",
+      "position": [
+        2080,
+        900
+      ],
+      "name": "Reply: open times",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- calendar-reply.js ----\n// check_calendar: only times where the whole cleaning fits. GHL calendars book fixed-length slots (here 1 hour),\n// so n8n books the real length with GHL's slot check off, and checks the fit here instead:\n// a start time fits when every slot from it until the end is free, which also keeps the job inside opening hours.\n// Up to 3 times per day, at least 2 hours apart, 8 in total.\nconst cfg = cfgOf();\nconst res = $input.first().json;\nconst hours = Number(reqOf().args.hours) > 0 ? Number(reqOf().args.hours) : 3;\nconst lengthMs = hours * 3_600_000;\nconst GAP_MS = 2 * 3_600_000;\n\nconst slots = Object.entries(res)\n  .filter(([k]) => /^\\d{4}-\\d{2}-\\d{2}$/.test(k))\n  .flatMap(([, v]) => {\n    const day = (v.slots ?? []).map((iso) => ({ iso, t: Date.parse(iso) })).sort((x, y) => x.t - y.t);\n    const free = new Set(day.map((s) => s.t));\n    const gaps = day.slice(1).map((s, i) => s.t - day[i].t).filter((d) => d > 0);\n    const step = gaps.length ? Math.min(...gaps) : 3_600_000;\n    const fits = (start) => {\n      for (let t = start; t < start + lengthMs; t += step) if (!free.has(t)) return false;\n      return true;\n    };\n    const picked = [];\n    for (const s of day) {\n      if (picked.length === 3) break;\n      if (fits(s.t) && (!picked.length || s.t - picked.at(-1).t >= GAP_MS)) picked.push(s);\n    }\n    return picked.map((s) => s.iso);\n  })\n  .slice(0, 8);\n\nconst result = slots.length\n  ? JSON.stringify({\n      instruction: \"Offer two times. Pass the chosen slot_iso to book_cleaning (or reschedule_cleaning).\",\n      slots: slots.map((iso) => ({ slot_iso: iso, say: spoken(iso, cfg.timezone) })),\n    })\n  : `No time in that window fits a ${hours}-hour cleaning. Ask for another day and call check_calendar again with preferred_day and hours.`;\nreturn [{ json: { result } }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "14678480-d32c-5214-a044-a6dbb90501f8",
+      "position": [
+        1560,
+        720
+      ],
+      "name": "Build booking",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- book-build.js ----\n// book_cleaning: the appointment body. Length = hours from get_quote (default 3).\n// ignoreFreeSlotValidation: GHL rejects any length other than the calendar's slot duration\n// (\"Selected slot duration is not a valid duration option\"). check_calendar already checked that the whole job fits.\nconst cfg = cfgOf();\nconst a = reqOf().args;\nconst start = new Date(str(a.slot_iso));\nconst hours = Number(a.hours) > 0 ? Number(a.hours) : 3;\nconst type = str(a.cleaning_type, \"Standard\");\nreturn [{ json: { hours, body: {\n  calendarId: cfg.calendarId,\n  locationId: cfg.locationId,\n  contactId: str(a.contact_id),\n  startTime: start.toISOString(),\n  endTime: new Date(start.getTime() + hours * 3_600_000).toISOString(),\n  title: `${type} cleaning: ${str(a.summary, \"AI-booked cleaning\")}`,\n  appointmentStatus: \"confirmed\",\n  ignoreFreeSlotValidation: true,\n} } }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "eb6530a9-bb15-54c4-ae3d-78e5a7d610f1",
+      "position": [
+        1820,
+        900
+      ],
+      "name": "GHL: book appointment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/calendars/events/appointments' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "2bec1bef-381f-570d-aa0d-7076b1d67ad2",
+      "position": [
+        2080,
+        1080
+      ],
+      "name": "Reply: booked",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- book-reply.js ----\n// book_cleaning: spoken confirmation; tag, opportunity and Sheet row follow after the reply.\nconst cfg = cfgOf();\nconst a = reqOf().args;\nconst { hours, body } = $(\"Build booking\").first().json;\nconst late = new Date(Date.parse(body.startTime) + 30 * 60_000).toISOString();\nconst total = Number(a.quote_total) || undefined;\nreturn [{ json: {\n  contact_id: body.contactId,\n  opportunity: `Booked - ${str(a.cleaning_type, \"Standard\")} cleaning${total ? ` $${total}` : \"\"}`,\n  value: total,\n  result: `Booked for ${spoken(body.startTime, cfg.timezone)}. The team arrives between ${spokenTime(body.startTime, cfg.timezone)} and ${spokenTime(late, cfg.timezone)} and stays about ${hours} hours. A confirmation text is on its way.`,\n  row: sheetRow(\"booked\", `${body.startTime} | ${str(a.cleaning_type)} | ${total ? `$${total}` : \"no quote\"} | ${str(a.summary)}`),\n} }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "7487f2a0-9ea1-5ba3-a353-05525c6d6262",
+      "position": [
+        2340,
+        720
+      ],
+      "name": "Respond: booked",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $('Reply: booked').first().json.result }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "277ae745-46b4-5c59-acdc-c8c7f11cfa6a",
+      "position": [
+        2600,
+        360
+      ],
+      "name": "Log: booked",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SHEETS_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Reply: booked').first().json.row) }}",
+        "options": {
+          "timeout": 8000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Optional: SHEETS_WEBHOOK_URL (sheets/call-log.gs). Without it this node fails quietly."
+    },
+    {
+      "id": "174a1b92-192e-5dae-adb4-375e959741f5",
+      "position": [
+        2860,
+        180
+      ],
+      "name": "Tag: booked",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/' + $('Reply: booked').first().json.contact_id + '/tags' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: ['booked'] }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "77b712af-c563-5c69-a6a2-e39c1b1b23be",
+      "position": [
+        3120,
+        180
+      ],
+      "name": "Opportunity: Booked",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/opportunities/upsert' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: $('Config').first().json.locationId, pipelineId: $('Config').first().json.pipelineId, pipelineStageId: $('Config').first().json.stageBooked, contactId: $('Reply: booked').first().json.contact_id, name: $('Reply: booked').first().json.opportunity, status: 'open', monetaryValue: $('Reply: booked').first().json.value }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "6abb0d74-21f4-5e72-a974-03b8f12d411c",
+      "position": [
+        1560,
+        900
+      ],
+      "name": "GHL: appointments to move",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/' + $('Normalize').first().json.args.contact_id + '/appointments' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "c10fd958-4f08-5e30-a921-2ce586c0a1ff",
+      "position": [
+        1820,
+        1080
+      ],
+      "name": "Pick visit to move",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- reschedule-pick.js ----\n// reschedule_cleaning: pick the appointment to move (by id, else the next one) and keep its length.\nconst cfg = cfgOf();\nconst a = reqOf().args;\nconst appts = upcoming($input.first().json.events, cfg.timezone);\nconst appt = appts.find((x) => x.id === str(a.appointment_id)) ?? appts[0];\nif (!appt) return [{ json: { found: false, result: \"No upcoming cleaning found to move. Offer to book a new one with book_cleaning instead.\" } }];\n\nconst start = new Date(str(a.slot_iso));\nconst lengthMs = appt.endTime ? Date.parse(appt.endTime) - Date.parse(appt.startTime) : 0;\nreturn [{ json: {\n  found: true,\n  appointmentId: appt.id,\n  from: appt.startTime,\n  body: {\n    calendarId: appt.calendarId,\n    startTime: start.toISOString(),\n    endTime: lengthMs > 0 ? new Date(start.getTime() + lengthMs).toISOString() : undefined,\n    appointmentStatus: \"confirmed\",\n    ignoreFreeSlotValidation: true, // same reason as book-build.js; check_calendar checked the fit\n\n  },\n} }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "ec96ec92-0961-58e1-ad2f-f6595f4e671e",
+      "position": [
+        2080,
+        1260
+      ],
+      "name": "Visit found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ffddec98-1acb-5f2d-afb7-f24504339a87",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e8da4402-c9b7-525f-a8b4-48e1213f5105",
+      "position": [
+        2340,
+        900
+      ],
+      "name": "GHL: move appointment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Config').first().json.ghlBase + '/calendars/events/appointments/' + $json.appointmentId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "6408ff70-6e3b-5766-ae7b-fc6743036ea4",
+      "position": [
+        2600,
+        540
+      ],
+      "name": "Reply: moved",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- reschedule-reply.js ----\n// reschedule_cleaning: confirmation; the note and Sheet row follow after the reply.\nconst cfg = cfgOf();\nconst a = reqOf().args;\nconst { from, body } = $(\"Pick visit to move\").first().json;\nconst was = spoken(from, cfg.timezone);\nconst now = spoken(body.startTime, cfg.timezone);\nreturn [{ json: {\n  contact_id: str(a.contact_id),\n  note: `AI call: cleaning moved from ${was} to ${now}.`,\n  result: `Moved the cleaning to ${now}. Rescheduling is free with 24 hours' notice, so there's no charge.`,\n  row: sheetRow(\"rescheduled\", `${from} -> ${body.startTime}`),\n} }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "04141802-cdf9-5885-a830-16078f324b97",
+      "position": [
+        2860,
+        360
+      ],
+      "name": "Respond: moved",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $('Reply: moved').first().json.result }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "e2a944ae-9598-5511-ac7e-58d4782f55e4",
+      "position": [
+        3120,
+        360
+      ],
+      "name": "Log: rescheduled",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SHEETS_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Reply: moved').first().json.row) }}",
+        "options": {
+          "timeout": 8000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Optional: SHEETS_WEBHOOK_URL (sheets/call-log.gs). Without it this node fails quietly."
+    },
+    {
+      "id": "2e1132f0-dd70-56e1-aee2-618e77bfb488",
+      "position": [
+        3380,
+        180
+      ],
+      "name": "Note: moved",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/' + $('Reply: moved').first().json.contact_id + '/notes' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $('Reply: moved').first().json.note }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "154e59ec-a629-5775-a6cb-ed85465b4b3c",
+      "position": [
+        1560,
+        1080
+      ],
+      "name": "Prep note",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- note-prep.js ----\n// add_note_and_tags: tags + note. A \"complaint\" tag also moves the lead to Needs attention (after the reply).\nconst a = reqOf().args;\nconst tags = (Array.isArray(a.tags) ? a.tags : str(a.tags).split(\",\"))\n  .map((t) => str(t).toLowerCase().replace(/\\s+/g, \"-\")).filter(Boolean);\nconst note = str(a.note);\nconst complaint = tags.includes(\"complaint\");\nconst event = [\"complaint\", \"out-of-area\", \"custom-quote\"].find((t) => tags.includes(t)) ?? \"note\";\nreturn [{ json: {\n  contact_id: str(a.contact_id),\n  tags,\n  hasTags: tags.length > 0,\n  note: note ? `AI call note: ${note}` : `AI call: tagged ${tags.join(\", \") || \"(none)\"}`,\n  complaint,\n  opportunity: `Complaint - ${note.slice(0, 60) || \"see notes\"}`,\n  result: complaint ? \"Complaint logged. Tell them the manager will call them back today.\" : \"Saved to the client record.\",\n  row: sheetRow(event.replace(/-/g, \"_\"), `${tags.join(\",\")} | ${note}`),\n} }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "ba63d01f-444b-5d9a-a1b6-2fc5acad5719",
+      "position": [
+        1820,
+        1260
+      ],
+      "name": "Any tags?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e7613d24-054f-599c-a397-53c96dcabf23",
+              "leftValue": "={{ $json.hasTags }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1306c174-aea3-59b5-a7dc-a175b75ef235",
+      "position": [
+        2080,
+        1440
+      ],
+      "name": "GHL: add tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/' + $('Prep note').first().json.contact_id + '/tags' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: $('Prep note').first().json.tags }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "4792f9d7-b3aa-5b91-a18a-745e242afbdb",
+      "position": [
+        2340,
+        1080
+      ],
+      "name": "GHL: add note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/' + $('Prep note').first().json.contact_id + '/notes' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $('Prep note').first().json.note }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "cdff851d-f4b3-5dd1-ab8c-d623a1118e49",
+      "position": [
+        2600,
+        720
+      ],
+      "name": "Respond: saved",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $('Prep note').first().json.result }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "0a6846df-bb49-587f-a8b4-72f4e6099376",
+      "position": [
+        2860,
+        540
+      ],
+      "name": "Log: note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SHEETS_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Prep note').first().json.row) }}",
+        "options": {
+          "timeout": 8000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Optional: SHEETS_WEBHOOK_URL (sheets/call-log.gs). Without it this node fails quietly."
+    },
+    {
+      "id": "6e89df4b-c571-5e27-a139-3ed80f8e1257",
+      "position": [
+        3120,
+        540
+      ],
+      "name": "Complaint?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "64106519-7991-5b1c-ac7b-b2377305dd95",
+              "leftValue": "={{ $('Prep note').first().json.complaint }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "591ac537-efcc-5983-ab64-ce61ae587af5",
+      "position": [
+        3380,
+        360
+      ],
+      "name": "Opportunity: Needs attention",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/opportunities/upsert' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: $('Config').first().json.locationId, pipelineId: $('Config').first().json.pipelineId, pipelineStageId: $('Config').first().json.stageAttention, contactId: $('Prep note').first().json.contact_id, name: $('Prep note').first().json.opportunity, status: 'open', monetaryValue: undefined }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "3b1eabd3-1f9a-5662-a56c-1f92ae7b09ab",
+      "position": [
+        1560,
+        1260
+      ],
+      "name": "Prep plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\nconst PRICING = {\"currency\":\"USD\",\"notes\":\"Read by the get_quote Code node. Edit, then run `node n8n/build.mjs` and re-import the tools workflow (see n8n-setup.md).\",\"price\":{\"base\":79,\"per_bedroom\":24,\"per_bathroom\":19,\"pets_fee\":15,\"minimum\":119,\"round_to\":5},\"labor_hours\":{\"base\":1.5,\"per_bedroom\":0.5,\"per_bathroom\":0.5,\"two_person_crew_above\":4},\"types\":{\"Standard\":{\"price_multiplier\":1,\"hours_multiplier\":1,\"includes\":\"dusting, vacuuming and mopping, kitchen counters and outside of appliances, bathrooms, beds made, trash out\"},\"Deep\":{\"price_multiplier\":1.6,\"hours_multiplier\":1.5,\"includes\":\"everything in Standard plus baseboards, inside the oven and fridge, cabinet fronts, light switches, door frames and window sills\"},\"Move-in/Move-out\":{\"price_multiplier\":1.9,\"hours_multiplier\":1.8,\"includes\":\"an empty home top to bottom: inside every cabinet, drawer and closet, all appliances inside and out, baseboards and windows from the inside\"},\"Post-construction\":{\"price_multiplier\":2.4,\"hours_multiplier\":2.2,\"includes\":\"fine dust removal from every surface, vents and fixtures, paint and sticker residue, floors cleaned twice\"}},\"frequency\":{\"One-time\":{\"discount\":0,\"visits_per_year\":1},\"Weekly\":{\"discount\":0.2,\"visits_per_year\":52},\"Biweekly\":{\"discount\":0.15,\"visits_per_year\":26},\"Monthly\":{\"discount\":0.1,\"visits_per_year\":12}},\"recurring_types\":[\"Standard\"],\"limits\":{\"max_bedrooms\":6,\"max_bathrooms\":5}};\n// ---- plan-prep.js ----\n// record_recurring_interest: decide the path. The email is saved BEFORE the tag, because the GHL workflow fires on the tag.\n//   declined -> tag recurring-declined | email -> save email, tag recurring-interest\n//   no_email -> tag recurring-interest (team calls) | ask -> ask once for an email\nconst a = reqOf().args;\nconst interested = a.interested === true || str(a.interested).toLowerCase() === \"true\";\nconst email = str(a.email).toLowerCase().replace(/\\s+/g, \"\");\nconst frequency = matchOption({ Weekly: 1, Biweekly: 1, Monthly: 1 }, a.frequency) || \"Biweekly\";\nconst visits = PRICING.frequency[frequency].visits_per_year;\nconst visitPrice = Number(a.visit_price) || 0;\n\nconst path = !interested ? \"declined\" : EMAIL_RE.test(email) ? \"email\" : email === \"none\" ? \"no_email\" : \"ask\";\nconst result = {\n  declined: \"Noted. Don't offer the plan again on this call.\",\n  email: `Saved. The ${frequency.toLowerCase()} plan details are being emailed to ${email}. Spell the address back once to confirm.`,\n  no_email: \"Saved. Tell them the team will call about the plan.\",\n  ask: 'No valid email yet. Ask once for their email and spell it back, then call record_recurring_interest again with it. If they would rather not, call it with email \"none\".',\n}[path];\n\nreturn [{ json: {\n  path,\n  contact_id: str(a.contact_id),\n  email,\n  opportunity: `Recurring ${frequency.toLowerCase()} plan${visitPrice ? ` - $${visitPrice}/visit` : \"\"}`,\n  value: visitPrice ? visitPrice * visits : undefined,\n  result,\n  row: sheetRow(path === \"declined\" ? \"plan_declined\" : \"plan_interest\", `${frequency} | ${visitPrice ? `$${visitPrice}` : \"?\"} | ${path === \"email\" ? email : \"no email\"}`),\n} }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "7cf7ae7d-3f43-564e-a842-5f9d176685f2",
+      "position": [
+        1820,
+        1440
+      ],
+      "name": "Plan answer?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e56cae6c-9d23-5ed6-a25f-3de76c07ee32",
+                    "leftValue": "={{ $json.path }}",
+                    "rightValue": "declined",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "declined"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b7846454-481e-58c8-a498-68ededcb0115",
+                    "leftValue": "={{ $json.path }}",
+                    "rightValue": "email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ec537548-3cde-5839-a3e1-1b757783dcb3",
+                    "leftValue": "={{ $json.path }}",
+                    "rightValue": "no_email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "no_email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8012f0ae-24d0-5c1c-a731-fa7983db5351",
+                    "leftValue": "={{ $json.path }}",
+                    "rightValue": "ask",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ask"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "62102844-8603-500e-a544-f9ea1c413a7d",
+      "position": [
+        2080,
+        1620
+      ],
+      "name": "Tag: recurring-declined",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/' + $('Prep plan').first().json.contact_id + '/tags' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: ['recurring-declined'] }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "35cfaeab-fcf5-5ced-a307-264eb0460af0",
+      "position": [
+        2340,
+        1260
+      ],
+      "name": "Respond: plan declined",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $('Prep plan').first().json.result }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "85b9950e-0161-5198-ae54-83d6a3a831da",
+      "position": [
+        2080,
+        1800
+      ],
+      "name": "GHL: save email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/' + $('Prep plan').first().json.contact_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $('Prep plan').first().json.email }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "7b7eede9-547e-582c-ac08-952d20ab7c4e",
+      "position": [
+        2340,
+        1440
+      ],
+      "name": "Email in use",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- plan-email-taken.js ----\n// record_recurring_interest: GHL refused to save the email, usually \"This location does not allow duplicated contacts\"\n// because another contact already has it (same household, or a client calling from a new phone).\n// Carry on without it: the recurring-interest tag still fires the GHL plan workflow, which takes its no-email branch (office task).\nconst err = $input.first().json.error;\nreturn [{ json: {\n  result: \"That email is already on another client's record, so it wasn't saved here. Don't spell it back. Say the team will call about the plan.\",\n  error: str(err?.message ?? err, \"\").slice(0, 200),\n} }];\n"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "f357feb7-c370-5057-a5d4-6416077361d4",
+      "position": [
+        2600,
+        900
+      ],
+      "name": "Tag: recurring-interest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/contacts/' + $('Prep plan').first().json.contact_id + '/tags' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: ['recurring-interest'] }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "ed42489d-756a-5043-a19c-002cde564144",
+      "position": [
+        2860,
+        720
+      ],
+      "name": "Respond: plan saved",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $('Email in use').isExecuted ? $('Email in use').first().json.result : $('Prep plan').first().json.result }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "f94333fa-dfbe-56e0-a970-b144b43db7b6",
+      "position": [
+        3120,
+        720
+      ],
+      "name": "Log: plan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SHEETS_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Prep plan').first().json.row) }}",
+        "options": {
+          "timeout": 8000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Optional: SHEETS_WEBHOOK_URL (sheets/call-log.gs). Without it this node fails quietly."
+    },
+    {
+      "id": "49e771bf-74c8-51f9-a385-6549afdd021c",
+      "position": [
+        3380,
+        540
+      ],
+      "name": "Opportunity: Recurring plan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.ghlBase + '/opportunities/upsert' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GHL_API_TOKEN }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: $('Config').first().json.locationId, pipelineId: $('Config').first().json.recurringPipelineId, pipelineStageId: $('Config').first().json.recurringStageInterested, contactId: $('Prep plan').first().json.contact_id, name: $('Prep plan').first().json.opportunity, status: 'open', monetaryValue: $('Prep plan').first().json.value }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Retell tool call": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Key OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Key OK?": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "401 Unauthorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize": {
+      "main": [
+        [
+          {
+            "node": "Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ready?": {
+      "main": [
+        [
+          {
+            "node": "Which tool?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply: system down": {
+      "main": [
+        [
+          {
+            "node": "Error row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error row": {
+      "main": [
+        [
+          {
+            "node": "Log: tool error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Which tool?": {
+      "main": [
+        [
+          {
+            "node": "GHL: find contact by phone",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calculate quote",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calendar window",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build booking",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GHL: appointments to move",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep note",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: find contact by phone": {
+      "main": [
+        [
+          {
+            "node": "Found?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Found?": {
+      "main": [
+        [
+          {
+            "node": "GHL: open jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: new client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply: new client": {
+      "main": [
+        [
+          {
+            "node": "Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: open jobs": {
+      "main": [
+        [
+          {
+            "node": "GHL: contact appointments",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: contact appointments": {
+      "main": [
+        [
+          {
+            "node": "GHL: stage names",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: stage names": {
+      "main": [
+        [
+          {
+            "node": "Reply: returning client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply: returning client": {
+      "main": [
+        [
+          {
+            "node": "Respond: returning client",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: returning client": {
+      "main": [
+        [
+          {
+            "node": "Log: returning client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log: returning client": {
+      "main": [
+        [
+          {
+            "node": "Tag: returning-customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build contact": {
+      "main": [
+        [
+          {
+            "node": "GHL: upsert contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: upsert contact": {
+      "main": [
+        [
+          {
+            "node": "Reply: contact saved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply: contact saved": {
+      "main": [
+        [
+          {
+            "node": "Respond: contact saved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: contact saved": {
+      "main": [
+        [
+          {
+            "node": "Opportunity: New lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate quote": {
+      "main": [
+        [
+          {
+            "node": "Respond: quote",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: quote": {
+      "main": [
+        [
+          {
+            "node": "Log: quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar window": {
+      "main": [
+        [
+          {
+            "node": "GHL: free slots",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: free slots": {
+      "main": [
+        [
+          {
+            "node": "Reply: open times",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply: open times": {
+      "main": [
+        [
+          {
+            "node": "Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build booking": {
+      "main": [
+        [
+          {
+            "node": "GHL: book appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: book appointment": {
+      "main": [
+        [
+          {
+            "node": "Reply: booked",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply: booked": {
+      "main": [
+        [
+          {
+            "node": "Respond: booked",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: booked": {
+      "main": [
+        [
+          {
+            "node": "Log: booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log: booked": {
+      "main": [
+        [
+          {
+            "node": "Tag: booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag: booked": {
+      "main": [
+        [
+          {
+            "node": "Opportunity: Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: appointments to move": {
+      "main": [
+        [
+          {
+            "node": "Pick visit to move",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick visit to move": {
+      "main": [
+        [
+          {
+            "node": "Visit found?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Visit found?": {
+      "main": [
+        [
+          {
+            "node": "GHL: move appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: move appointment": {
+      "main": [
+        [
+          {
+            "node": "Reply: moved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply: moved": {
+      "main": [
+        [
+          {
+            "node": "Respond: moved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: moved": {
+      "main": [
+        [
+          {
+            "node": "Log: rescheduled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log: rescheduled": {
+      "main": [
+        [
+          {
+            "node": "Note: moved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep note": {
+      "main": [
+        [
+          {
+            "node": "Any tags?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any tags?": {
+      "main": [
+        [
+          {
+            "node": "GHL: add tags",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GHL: add note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: add tags": {
+      "main": [
+        [
+          {
+            "node": "GHL: add note",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: add note": {
+      "main": [
+        [
+          {
+            "node": "Respond: saved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: saved": {
+      "main": [
+        [
+          {
+            "node": "Log: note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log: note": {
+      "main": [
+        [
+          {
+            "node": "Complaint?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Complaint?": {
+      "main": [
+        [
+          {
+            "node": "Opportunity: Needs attention",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep plan": {
+      "main": [
+        [
+          {
+            "node": "Plan answer?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan answer?": {
+      "main": [
+        [
+          {
+            "node": "Tag: recurring-declined",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GHL: save email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tag: recurring-interest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag: recurring-declined": {
+      "main": [
+        [
+          {
+            "node": "Respond: plan declined",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: save email": {
+      "main": [
+        [
+          {
+            "node": "Tag: recurring-interest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email in use",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag: recurring-interest": {
+      "main": [
+        [
+          {
+            "node": "Respond: plan saved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: plan saved": {
+      "main": [
+        [
+          {
+            "node": "Log: plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log: plan": {
+      "main": [
+        [
+          {
+            "node": "Opportunity: Recurring plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email in use": {
+      "main": [
+        [
+          {
+            "node": "Tag: recurring-interest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: system down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "active": false
+}

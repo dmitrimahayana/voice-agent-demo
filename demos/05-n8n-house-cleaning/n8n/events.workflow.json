@@ -1,0 +1,276 @@
+{
+  "id": "brightnestEvents",
+  "name": "Demo 5: Brightnest call events (Retell -> Sheet)",
+  "nodes": [
+    {
+      "id": "b39df324-6801-5277-a6f8-64855ccaf625",
+      "position": [
+        0,
+        0
+      ],
+      "name": "Retell call event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "brightnest-events",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "4cbe6e93-05cc-5134-a1e0-8e135b0f78bd"
+    },
+    {
+      "id": "b3093701-a33f-57a4-a5a5-a6ea5585c7f8",
+      "position": [
+        260,
+        0
+      ],
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52e3a87b-32a6-5e0f-a000-d57c2b104012",
+              "name": "authorized",
+              "type": "boolean",
+              "value": "={{ !$env.BRIGHTNEST_WEBHOOK_KEY || $json.query.key === $env.BRIGHTNEST_WEBHOOK_KEY }}"
+            },
+            {
+              "id": "6dbdd022-a80b-5378-a58d-0562108a3a35",
+              "name": "sheetTab",
+              "type": "string",
+              "value": "={{ $env.SHEET_TAB || 'demo5' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "Settings come from the container environment (demos/05-n8n-house-cleaning/.env)."
+    },
+    {
+      "id": "3d6fd3df-0983-5132-aec4-7c76da8f9659",
+      "position": [
+        520,
+        0
+      ],
+      "name": "Key OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e58e045c-2e83-5fe2-aa07-12504f873066",
+              "leftValue": "={{ $json.authorized }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e0269c47-4503-5fb1-ac24-60873f57bd1a",
+      "position": [
+        780,
+        0
+      ],
+      "name": "401 Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: 'unauthorized' }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "1e46eee2-de13-595e-af49-d1e7499a3317",
+      "position": [
+        780,
+        180
+      ],
+      "name": "204 No Content",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 204
+        }
+      }
+    },
+    {
+      "id": "85fd716f-cc58-5bd3-a52b-7fa9ea745be2",
+      "position": [
+        1040,
+        0
+      ],
+      "name": "Call analysed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f6b5a573-4e08-56b7-a030-103893ad458a",
+              "leftValue": "={{ $('Retell call event').first().json.body.event === 'call_analyzed' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "aa02c07c-5deb-5f12-a60c-a03e2a9312e1",
+      "position": [
+        1300,
+        0
+      ],
+      "name": "Call row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Shared helpers, prepended to every Code node by n8n/build.mjs. Ported from functions/src/lib (Demo 2's Worker).\nconst str = (v, fallback = \"\") => (typeof v === \"string\" ? v.trim() : v == null ? fallback : String(v));\nconst cfgOf = () => $(\"Config\").first().json;\nconst reqOf = () => $(\"Normalize\").first().json;\nconst EMAIL_RE = /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/;\n\n/** \"+1 303 555 0142\", \"3035550142\" -> \"+13035550142\" (GHL stores E.164). */\nfunction toE164(raw) {\n  const d = str(raw).replace(/\\D/g, \"\");\n  if (!d) return \"\";\n  if (str(raw).startsWith(\"+\")) return `+${d}`;\n  return d.length === 10 ? `+1${d}` : `+${d}`;\n}\n\n/** \"Tuesday, November 18 at 10:30 AM\" in the business time zone, for the agent to read aloud. */\nfunction spoken(iso, timeZone) {\n  const d = new Date(iso);\n  const day = d.toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\", timeZone });\n  return `${day} at ${spokenTime(iso, timeZone)}`;\n}\nconst spokenTime = (iso, timeZone) => new Date(iso).toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone });\n\n/** GHL returns times with an offset or as local wall time (\"2026-11-17 09:00:00\"). Normalise both to ISO. */\nfunction ghlTimeToIso(t, timeZone) {\n  if (/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(t)) return new Date(t).toISOString();\n  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?/);\n  if (!m) return new Date(t).toISOString();\n  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0));\n  const parts = Object.fromEntries(new Intl.DateTimeFormat(\"en-US\", {\n    timeZone, hourCycle: \"h23\", year: \"numeric\", month: \"2-digit\", day: \"2-digit\", hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\",\n  }).formatToParts(new Date(asUtc)).map((x) => [x.type, x.value]));\n  const zoned = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);\n  return new Date(asUtc - (zoned - asUtc)).toISOString();\n}\n\n/** Upcoming, not-cancelled appointments, soonest first, with ISO times. */\nfunction upcoming(events, timeZone) {\n  const now = Date.now();\n  return (events ?? [])\n    .map((e) => ({ ...e, startTime: ghlTimeToIso(e.startTime, timeZone), endTime: e.endTime ? ghlTimeToIso(e.endTime, timeZone) : undefined }))\n    .filter((e) => !/cancel|noshow|invalid/i.test(e.appointmentStatus ?? \"\") && Date.parse(e.startTime) > now)\n    .sort((a, b) => a.startTime.localeCompare(b.startTime));\n}\n\n/** One row for the Google Sheet call log (sheets/call-log.gs). */\nfunction sheetRow(event, details) {\n  const cfg = cfgOf();\n  const req = reqOf();\n  return { sheet: cfg.sheetTab, timestamp: new Date().toISOString(), demo: \"house-cleaning\", platform: \"retell\", callId: req.callId, caller: req.callerNumber, event, details };\n}\n\n/** Case- and punctuation-insensitive match of a spoken value to an option key (\"deep clean\" -> \"Deep\"). */\nfunction matchOption(options, value) {\n  const norm = (s) => str(s).toLowerCase().replace(/[^a-z]/g, \"\");\n  const v = norm(value);\n  if (!v) return \"\";\n  return Object.keys(options).find((k) => norm(k) === v)\n    ?? Object.keys(options).find((k) => v.startsWith(norm(k).slice(0, 4)) || norm(k).startsWith(v.slice(0, 4)))\n    ?? \"\";\n}\n\n\n// ---- event-row.js ----\n// Events workflow: one Sheet row per analysed call (Retell call_analyzed).\nconst call = $(\"Retell call event\").first().json.body.call ?? {};\nconst analysis = call.call_analysis ?? {};\nconst collected = Object.entries(analysis.custom_analysis_data ?? {})\n  .filter(([, v]) => v != null && v !== \"\")\n  .map(([k, v]) => `${k}=${v}`);\nconst duration = call.end_timestamp && call.start_timestamp ? Math.round((call.end_timestamp - call.start_timestamp) / 1000) : \"\";\nreturn [{ json: { row: {\n  sheet: $(\"Config\").first().json.sheetTab,\n  timestamp: new Date().toISOString(),\n  demo: \"house-cleaning\",\n  platform: \"retell\",\n  callId: call.call_id ?? \"\",\n  caller: (call.direction === \"outbound\" ? call.to_number : call.from_number) ?? \"\",\n  event: \"call_ended\",\n  details: [call.disconnection_reason, analysis.user_sentiment && `sentiment=${analysis.user_sentiment}`, ...collected].filter(Boolean).join(\" | \"),\n  summary: analysis.call_summary ?? \"\",\n  durationSec: duration,\n  recordingUrl: call.recording_url ?? \"\",\n} } }];\n"
+      }
+    },
+    {
+      "id": "c243b94d-19b2-5ed8-ad9d-e9bb9482679e",
+      "position": [
+        1560,
+        0
+      ],
+      "name": "Log: call ended",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SHEETS_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.row) }}",
+        "options": {
+          "timeout": 8000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Optional: SHEETS_WEBHOOK_URL (sheets/call-log.gs). Without it this node fails quietly."
+    }
+  ],
+  "connections": {
+    "Retell call event": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Key OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Key OK?": {
+      "main": [
+        [
+          {
+            "node": "204 No Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "401 Unauthorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "204 No Content": {
+      "main": [
+        [
+          {
+            "node": "Call analysed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call analysed?": {
+      "main": [
+        [
+          {
+            "node": "Call row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call row": {
+      "main": [
+        [
+          {
+            "node": "Log: call ended",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "active": false
+}

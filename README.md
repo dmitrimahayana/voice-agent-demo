@@ -1,6 +1,6 @@
 # AI Voice Agent Portfolio
 
-Four working voice-agent demos built on Retell, Vapi, ElevenLabs and GoHighLevel. Each one targets a different buyer, and all four run on free tiers and trial credits.
+Five working voice-agent demos built on Retell, Vapi, ElevenLabs, GoHighLevel and n8n. Each one targets a different buyer, and all five run on free tiers and trial credits.
 
 | Demo | Buyer | What it proves | Stack |
 |---|---|---|---|
@@ -8,6 +8,7 @@ Four working voice-agent demos built on Retell, Vapi, ElevenLabs and GoHighLevel
 | [02 GHL home services](demos/02-ghl-home-services) | Agencies on GoHighLevel | Qualifies callers and writes contact, fields, tags, pipeline and booking into GHL during the call | Retell, GoHighLevel |
 | [03 Speed-to-lead](demos/03-speed-to-lead) | White-label agencies | Web form to AI callback in about 30 seconds; one template, many clients | Vapi, n8n (or the Worker), Twilio |
 | [04 Skin studio receptionist](demos/04-skincare-studio) | Spas, facial studios and salons with Spanish-speaking clients | Recommends a treatment for the guest's skin, books it, emails the reservation, switches English ⇄ Spanish mid-call, scores every call | ElevenLabs Agents, Cal.com, Resend |
+| [05 House-cleaning booker on n8n](demos/05-n8n-house-cleaning) | Agencies running GoHighLevel and n8n | Quotes from home size, books the quoted length, offers a recurring plan, routes complaints; every tool is a visible n8n workflow. Self-contained: own GHL sub-account, prompt and setup | Retell, n8n (self-hosted), GoHighLevel |
 
 ## How it fits together
 

@@ -14,6 +14,8 @@ demos/*/retell-llm.json
 demos/*/retell-agent.json
 demos/*/tools.elevenlabs.json
 demos/*/agent.elevenlabs.json
+# Demo 5 Retell agent IDs (setup-retell.mjs)
+demos/*/.agent.json
 
 # Supabase CLI local state (if you ever use the CLI)
 supabase/.temp/
