@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Voice Agents by Dmitri Mahayana</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d5c58'/%3E%3Cg stroke='%23fff' stroke-width='5' stroke-linecap='round'%3E%3Cpath d='M16 26v12'/%3E%3Cpath d='M26 18v28'/%3E%3Cpath d='M36 22v20'/%3E%3Cpath d='M46 28v8'/%3E%3C/g%3E%3C/svg%3E">
-<meta name="description" content="AI receptionists that answer the phone and put the booking in your calendar. Built on Vapi, Retell and ElevenLabs by Dmitri Mahayana. Three working demos with video.">
+<meta name="description" content="AI receptionists that answer the phone and put the booking in your calendar. Built on Vapi, Retell, ElevenLabs and n8n by Dmitri Mahayana. Four working demos with video.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
     - Palette: warm paper + navy ink reads as a consultant's printed proposal; deep teal is the one accent, kept for calls to action.
     - Type: Newsreader (editorial serif) carries the voice in headings and numerals; Public Sans keeps body and UI plain and legible.
     - Motif: italic serif demo numbers plus the waveform mark (favicon, call panel) tie the page to "voice".
-    - Layout: demos alternate video side on wide screens so three similar items do not read as a card grid.
+    - Layout: demos alternate video side on wide screens so similar items do not read as a card grid.
     - Elevation: only the call panel has a shadow, because it holds the page's one live action.
     - Theme: light by default (content-first page), with a working dark toggle that follows the system setting until chosen.
     - Motion: hover and focus feedback only (MOTION 1); nothing animates on its own.
@@ -114,7 +114,6 @@
   .demo-body ul { margin: 16px 0 24px; padding-left: 1.1em; }
   .demo-body li { margin: 6px 0; }
   .note { font-size: .95rem; padding-top: 4px; }
-
   /* Businesses: statement + list */
   .split { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 72px); align-items: start; }
   .split .section-head { margin-bottom: 0; }
@@ -188,10 +187,10 @@
     <div class="wrap">
       <div>
         <h1>Voice agents that answer the phone and put the booking in your calendar.</h1>
-        <p class="lead">I build AI receptionists on Vapi, Retell and ElevenLabs, connected to the calendar and CRM a business already uses. Former Intelligent Automation lead at Deloitte.</p>
+        <p class="lead">I build AI receptionists on Vapi, Retell and ElevenLabs, with n8n workflows where you need them, connected to the calendar and CRM a business already uses. Former Intelligent Automation lead at Deloitte.</p>
         <div class="actions">
           <a class="btn primary" href="tel:+19706455167">Call the demo line</a>
-          <a class="btn" href="#demos">Watch the three demos</a>
+          <a class="btn" href="#demos">Watch the four demos</a>
         </div>
       </div>
 
@@ -218,7 +217,7 @@
   <section id="demos" aria-labelledby="demos-heading">
     <div class="wrap">
       <div class="section-head">
-        <h2 id="demos-heading">Three working demos</h2>
+        <h2 id="demos-heading">Four working demos</h2>
         <p>Each one runs on real accounts: a live calendar, a real CRM and a call log. The videos show full calls from start to finish.</p>
       </div>
 
@@ -273,6 +272,24 @@
             <li>Switches between English and Spanish in the middle of a call</li>
           </ul>
           <a class="btn primary" href="dewlane/">Talk to Elena in your browser</a>
+        </div>
+      </article>
+
+      <article class="demo" aria-labelledby="demo4-title">
+        <div class="demo-media">
+          <iframe src="https://www.youtube-nocookie.com/embed/V6Ma5oSthLo" title="Demo video: AI voice agent for house cleaning on Retell and n8n" width="560" height="315" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="demo-body">
+          <span class="demo-num" aria-hidden="true">04</span>
+          <h3 id="demo4-title">House-cleaning booking agent</h3>
+          <p class="stack">Retell, n8n (self-hosted), GoHighLevel</p>
+          <p>Maya is an AI voice agent on Retell that quotes and books house cleanings. Every step she takes runs as an n8n workflow, so an agency can open it, see each call's path and change it without writing code.</p>
+          <ul>
+            <li>Prices the job from bedrooms, bathrooms, cleaning type and pets, and books the full time on site in the GHL calendar</li>
+            <li>Logs complaints for the manager and moves the client's card to Needs attention</li>
+            <li>Offers a recurring plan, saves the email and sends the plan details through GHL workflows</li>
+          </ul>
+          <p class="note">This demo runs on a self-hosted n8n and a GoHighLevel account, so it's shown on video. A live walkthrough of the workflows is available on a call.</p>
         </div>
       </article>
     </div>
